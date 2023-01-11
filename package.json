@@ -4,8 +4,8 @@
   "description": "Mtn Electronic Testing System ",
   "main": "server.js",
   "scripts": {
-    "start": "NODE_ENV=production node server.js",
-    "dev": "nodemon server.js"
+    "start": "NODE_ENV=production node testing2.js",
+    "dev": "nodemon testing2.js"
   },
   "repository": {
     "type": "git",
@@ -43,7 +43,9 @@
     "xss-clean": "^0.1.1"
   },
   "devDependencies": {
+    "eslint": "^8.24.0",
+    "node-sp-auth": "^3.0.7",
     "nodemon": "^2.0.15",
-    "eslint": "^8.24.0"
+    "request-promise": "^4.2.6"
   }
 }

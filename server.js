@@ -14,7 +14,6 @@ const connectDB = require("./config/db");
 dotenv.config({ path: "./config/.env" });
 
 // import routes
-// TODO: Add Routes
 const item  = require("./routes/item")
 
 // configure express
