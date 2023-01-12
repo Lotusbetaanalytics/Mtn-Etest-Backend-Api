@@ -23,8 +23,6 @@ exports.login = asyncHandler(async (req, res, next) => {
     .getAuth(url, {
       clientId: username,
       clientSecret: password,
-      // username: username,
-      // password: password,
     })
     .then(function (options) {
       // Headers
@@ -107,8 +105,8 @@ const sendTokenResponse = (user, statusCode, res) => {
 exports.getMe = asyncHandler(async (req, res, next) => {
   spauth
     .getAuth(url, {
-      username: username,
-      password: password,
+      clientId: username,
+      clientSecret: password,
     })
     .then(function (options) {
       // Headers
@@ -169,8 +167,8 @@ exports.updateProfile = asyncHandler(async (req, res, next) => {
   }
   spauth
     .getAuth(url, {
-      username: username,
-      password: password,
+      clientId: username,
+      clientSecret: password,
     })
     .then(function (options) {
       // Headers

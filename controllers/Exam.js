@@ -5,15 +5,15 @@ var spauth = require("node-sp-auth");
 var requestprom = require("request-promise");
 // Site and User Creds
 var url = process.env.SITE;
-var username = process.env.EMAIL;
-var password = process.env.PASSWORD;
+var username = process.env.CLIENT_ID;
+var password = process.env.CLIENT_SECRET;
 
 exports.getMyExam = asyncHandler(async (req, res, next) => {
   // Authenticate with hardcoded credentials
   spauth
     .getAuth(url, {
-      username: username,
-      password: password,
+      clientId: username,
+      clientSecret: password,
     })
     .then(function (options) {
       // Headers
@@ -72,8 +72,8 @@ exports.getSections = asyncHandler(async (req, res, next) => {
   // Authenticate with hardcoded credentials
   spauth
     .getAuth(url, {
-      username: username,
-      password: password,
+      clientId: username,
+      clientSecret: password,
     })
     .then(function (options) {
       // Headers
@@ -129,8 +129,8 @@ exports.getQuestions = asyncHandler(async (req, res, next) => {
   // Authenticate with hardcoded credentials
   spauth
     .getAuth(url, {
-      username: username,
-      password: password,
+      clientId: username,
+      clientSecret: password,
     })
     .then(function (options) {
       // Headers
@@ -183,8 +183,8 @@ exports.answerQuestion = asyncHandler(async (req, res, next) => {
   }
   spauth
     .getAuth(url, {
-      username: username,
-      password: password,
+      clientId: username,
+      clientSecret: password,
     })
     .then(function (options) {
       // Headers
