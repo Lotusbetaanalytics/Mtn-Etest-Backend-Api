@@ -237,3 +237,32 @@ exports.answerQuestion = asyncHandler(async (req, res, next) => {
       return next(new ErrorResponse(err, 500));
     });
 });
+
+exports.verifyExamPassCode = asyncHandler(async (req, res, next) => {
+  if (!Object.keys(req.body).length) {
+    return next(new ErrorResponse("Fields cannot be empty.", 400));
+  }
+
+  const options = await spauth.getAuth(url, {
+    clientId: username,
+    clientSecret: password,
+  });
+
+  const headers = options.headers;
+  headers["Accept"] = "application/json;odata=verbose";
+  const listResponses = await requestprom.get({
+    url:
+      url +
+      `/_api/web/lists/getByTitle('CandidateExam')/items?$filter=Passcode eq '${req.body.Passcode}' and ExamScheduleIdId eq '${req.params.id}'`,
+    headers: headers,
+    json: true,
+  });
+
+  if (!listResponses.d.results.length) {
+    return next(new ErrorResponse("No exam with this passcode found", 404));
+  }
+
+  res.status(200).json({
+    success: true,
+  });
+});
