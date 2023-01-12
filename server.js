@@ -17,6 +17,7 @@ dotenv.config({ path: "./config/.env" });
 
 // Routes Files
 const candidate = require("./routes/Candidate");
+const exam = require("./routes/Exam");
 
 //connect to database
 
@@ -54,6 +55,7 @@ app.use(cors());
 //Mount Routers
 
 app.use("/api/v1/auth/", candidate);
+app.use("/api/v1/exam/", exam);
 
 app.use(errorHandler);
 

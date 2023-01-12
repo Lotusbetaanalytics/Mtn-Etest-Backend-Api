@@ -1,7 +1,6 @@
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
-const jwt = require("jsonwebtoken");
-var http = require("http");
+
 var spauth = require("node-sp-auth");
 var requestprom = require("request-promise");
 // Site and User Creds
@@ -9,15 +8,7 @@ var url = process.env.SITE;
 var username = process.env.EMAIL;
 var password = process.env.PASSWORD;
 
-exports.login = asyncHandler(async (req, res, next) => {
-  const userId = req.body.userID;
-  const passcode = req.body.passcode;
-  //validate email & password
-  if (!userId || !passcode) {
-    return next(
-      new ErrorResponse("Please Provide an UserId and Passcode", 400)
-    );
-  }
+exports.getMyExam = asyncHandler(async (req, res, next) => {
   // Authenticate with hardcoded credentials
   spauth
     .getAuth(url, {
@@ -33,7 +24,7 @@ exports.login = asyncHandler(async (req, res, next) => {
         .get({
           url:
             url +
-            `/_api/web/lists/getByTitle('Candidate')/items?$filter=((UserId eq '${userId}') and (RawPasscode eq '${passcode}'))`,
+            `/_api/web/lists/getByTitle('CandidateExam')/items?$filter=CandidateId eq '${req.user}'`,
           headers: headers,
           json: true,
         })
@@ -42,30 +33,31 @@ exports.login = asyncHandler(async (req, res, next) => {
           if (items.length <= 0) {
             return next(new ErrorResponse("Invalid credentials", 401));
           }
-          var user = {};
+          var response = [];
           items.forEach(function (item) {
             if (item) {
-              user = {
+              response.push({
                 ID: item.ID,
-                Title: item.Title,
-                PhoneNumber: item.PhoneNumber,
-                Email: item.Email,
-                DateOfBirth: item.DateOfBirth,
-                MaritalStatus: item.MaritalStatus,
-                Sex: item.Sex,
-                YearsOfExperience: item.YearsOfExperience,
-                Firstname: item.Firstname,
+                CandidateIdId: item.CandidateIdId,
+                ExamScheduleIdId: item.ExamScheduleIdId,
+                Passcode: item.Passcode,
                 Batch: item.Batch,
-                Passport: item.Passport,
-                Middlename: item.Middlename,
-                Lastname: item.Lastname,
-                Fullname: item.Fullname,
-              };
+                BatchIdId: item.BatchIdId,
+                Candidate: item.Candidate,
+                ExamSchedule: item.ExamSchedule,
+                SelectedOption: item.SelectedOption,
+                DueDate: item.DueDate,
+                Mark: item.Mark,
+                Status: item.Status,
+              });
             }
           }, this);
 
           // Print / Send back the data
-          sendTokenResponse(user, 200, res);
+          res.status(200).json({
+            success: true,
+            data: response,
+          });
         })
         .catch(function (err) {
           return next(new ErrorResponse(err, 500));
@@ -76,33 +68,8 @@ exports.login = asyncHandler(async (req, res, next) => {
     });
 });
 
-const sendTokenResponse = (user, statusCode, res) => {
-  //create token
-  const token = jwt.sign({ id: user.ID }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE,
-  });
-
-  const options = {
-    expires: new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000
-    ),
-    httpOnly: true,
-  };
-  if (process.env.NODE_ENV === "production") {
-    options.secure = true;
-  }
-
-  res.status(statusCode).cookie("token", token, options).json({
-    success: true,
-    token,
-  });
-};
-
-// @desc    Get current logged in user
-// @route   POST/api/v1/auth/me
-// @access   Private
-
-exports.getMe = asyncHandler(async (req, res, next) => {
+exports.getSections = asyncHandler(async (req, res, next) => {
+  // Authenticate with hardcoded credentials
   spauth
     .getAuth(url, {
       username: username,
@@ -117,39 +84,88 @@ exports.getMe = asyncHandler(async (req, res, next) => {
         .get({
           url:
             url +
-            `/_api/web/lists/getByTitle('Candidate')/items?$filter=ID eq '${req.user}'`,
+            `/_api/web/lists/getByTitle('ExamQuest')/items?$filter=ExamScheduleId eq '${parseInt(
+              req.params.id
+            )}'`,
           headers: headers,
           json: true,
         })
         .then(function (listresponse) {
           var items = listresponse.d.results;
 
-          var user = {};
+          var response = [];
           items.forEach(function (item) {
             if (item) {
-              user = {
-                ID: item.ID,
-                Title: item.Title,
-                PhoneNumber: item.PhoneNumber,
-                Email: item.Email,
-                DateOfBirth: item.DateOfBirth,
-                MaritalStatus: item.MaritalStatus,
-                Sex: item.Sex,
-                YearsOfExperience: item.YearsOfExperience,
-                Firstname: item.Firstname,
-                Batch: item.Batch,
-                Passport: item.Passport,
-                Middlename: item.Middlename,
-                Lastname: item.Lastname,
-                Fullname: item.Fullname,
-              };
+              response.push({
+                ExamSectionIdId: item.ExamSectionIdId,
+                ExamSection: item.ExamSection,
+              });
             }
           }, this);
+          // Print / Send back the data
+          removeDuplicate(response, "ExamSection", res);
+        })
+        .catch(function (err) {
+          return next(new ErrorResponse(err, 500));
+        });
+    })
+    .catch(function (err) {
+      return next(new ErrorResponse(err, 500));
+    });
+});
 
+const removeDuplicate = (arr = [], key, res) => {
+  var checker = new Set();
+  const data = arr.filter(
+    (it) => !checker.has(it[key]) && checker.add(it[key])
+  );
+  res.status(200).json({
+    success: true,
+    data,
+  });
+};
+
+exports.getQuestions = asyncHandler(async (req, res, next) => {
+  // Authenticate with hardcoded credentials
+  spauth
+    .getAuth(url, {
+      username: username,
+      password: password,
+    })
+    .then(function (options) {
+      // Headers
+      var headers = options.headers;
+      headers["Accept"] = "application/json;odata=verbose";
+      // Pull the SharePoint list items
+      requestprom
+        .get({
+          url:
+            url +
+            `/_api/web/lists/getByTitle('ExamQuest')/items?$filter=ExamSectionId eq '${parseInt(
+              req.params.id
+            )}'&$select=Question, QuestionId/Answers, QuestionId/ID,QuestionId/Category&$expand=QuestionId`,
+          headers: headers,
+          json: true,
+        })
+        .then(function (listresponse) {
+          var items = listresponse.d.results;
+
+          var response = [];
+          items.forEach(function (item) {
+            if (item) {
+              // response.push(item);
+              response.push({
+                Question: item.Question,
+                QuestionID: item.QuestionId.ID,
+                Category: item.QuestionId.Category,
+                Answers: JSON.parse(item.QuestionId.Answers),
+              });
+            }
+          }, this);
           // Print / Send back the data
           res.status(200).json({
             success: true,
-            data: user,
+            data: response,
           });
         })
         .catch(function (err) {
@@ -161,7 +177,7 @@ exports.getMe = asyncHandler(async (req, res, next) => {
     });
 });
 
-exports.updateProfile = asyncHandler(async (req, res, next) => {
+exports.answerQuestion = asyncHandler(async (req, res, next) => {
   if (Object.keys(req.body).length <= 0) {
     return next(new ErrorResponse("Fields cannot be empty.", 400));
   }
@@ -186,7 +202,7 @@ exports.updateProfile = asyncHandler(async (req, res, next) => {
 
           var headers = options.headers;
           headers["Accept"] = "application/json;odata=verbose";
-          headers["X-HTTP-Method"] = "MERGE";
+          headers["X-HTTP-Method"] = "POST";
           headers["X-RequestDigest"] = digest;
           headers["IF-MATCH"] = "*";
           // update user profile
@@ -194,9 +210,13 @@ exports.updateProfile = asyncHandler(async (req, res, next) => {
             .post({
               url:
                 url +
-                `/_api/web/lists/getByTitle('Candidate')/items(${req.user})`,
+                `/_api/web/lists/getByTitle('CandidateExamQuestionChoice')/items`,
               headers: headers,
-              body: req.body,
+              body: {
+                ...req.body,
+                CandidateIdId: req.user,
+                CandidateExamQuestionIdId: req.params.id,
+              },
               json: true,
             })
             .then(function (listresponse) {
