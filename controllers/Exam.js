@@ -240,7 +240,7 @@ exports.answerQuestion = asyncHandler(async (req, res, next) => {
 
 exports.verifyExamPassCode = asyncHandler(async (req, res, next) => {
   if (!Object.keys(req.body).length) {
-    return next(new ErrorResponse("Fields cannot be empty.", 400));
+    return next(new ErrorResponse("Please enter the exam passcode", 400));
   }
 
   const options = await spauth.getAuth(url, {
