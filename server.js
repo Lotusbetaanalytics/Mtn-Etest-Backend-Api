@@ -19,6 +19,7 @@ dotenv.config({ path: "./config/.env" });
 const candidate = require("./routes/Candidate");
 const exam = require("./routes/Exam");
 
+
 //connect to database
 
 const app = express();
