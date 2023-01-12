@@ -33,9 +33,11 @@
     "mongoose": "^5.12.11",
     "morgan": "^1.10.0",
     "multer": "^1.4.3",
+    "node-sp-auth": "^3.0.7",
     "nodemailer": "^6.6.1",
     "otp-generator": "^2.0.0",
     "request": "^2.88.2",
+    "request-promise": "^4.2.6",
     "slugify": "^1.5.3",
     "xss-clean": "^0.1.1"
   },

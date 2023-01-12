@@ -5,25 +5,20 @@ const morgan = require("morgan");
 const colors = require("colors");
 const fileupload = require("express-fileupload");
 const cookieParser = require("cookie-parser");
-const mongoSanitize = require("express-mongo-sanitize");
 const helmet = require("helmet");
 const xss = require("xss-clean");
 const rateLimit = require("express-rate-limit");
 const hpp = require("hpp");
 const cors = require("cors");
 const errorHandler = require("./middleware/error");
-const connectDB = require("./config/db");
-
-// Routes Files
-const user = require("./routes/User");
-const branch = require("./routes/Branch");
-const company = require("./routes/Company");
 
 //load env vars
 dotenv.config({ path: "./config/.env" });
 
+// Routes Files
+const candidate = require("./routes/Candidate");
+
 //connect to database
-connectDB();
 
 const app = express();
 
@@ -36,9 +31,6 @@ if (process.env.NODE_ENV === "development") {
 }
 //file uploads
 app.use(fileupload());
-
-//Sanitize data
-app.use(mongoSanitize());
 
 //set security headers
 app.use(helmet());
@@ -61,9 +53,7 @@ app.use(cors());
 
 //Mount Routers
 
-app.use("/api/v1/auth/", user);
-app.use("/api/v1/branch/", branch);
-app.use("/api/v1/company/", company);
+app.use("/api/v1/auth/", candidate);
 
 app.use(errorHandler);
 
