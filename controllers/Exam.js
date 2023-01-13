@@ -1,6 +1,6 @@
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
-const { shuffleArray } = require("../utils/generalUtils")
+const { shuffleArray } = require("../utils/generalUtils");
 
 var spauth = require("node-sp-auth");
 var requestprom = require("request-promise");
@@ -128,8 +128,8 @@ const removeDuplicate = (arr = [], key, res) => {
 
 exports.getQuestions = asyncHandler(async (req, res, next) => {
   // get shuffle from request query
-  const {shuffle = false} = req.query;
-  
+  const { shuffle = false } = req.query;
+
   // Authenticate with hardcoded credentials
   spauth
     .getAuth(url, {
@@ -167,7 +167,7 @@ exports.getQuestions = asyncHandler(async (req, res, next) => {
             }
           }, this);
           // Randomize questions if shuffle is true
-          if (shuffle || (shuffle === "true")) shuffleArray(response)
+          if (shuffle || shuffle === "true") shuffleArray(response);
 
           // Print / Send back the data
           res.status(200).json({
@@ -188,6 +188,64 @@ exports.answerQuestion = asyncHandler(async (req, res, next) => {
   if (Object.keys(req.body).length <= 0) {
     return next(new ErrorResponse("Fields cannot be empty.", 400));
   }
+
+  const it = await getUserSubmissions(req);
+
+  if (it.length) {
+    spauth
+      .getAuth(url, {
+        clientId: username,
+        clientSecret: password,
+      })
+      .then(function (options) {
+        // Headers
+        var headers = options.headers;
+        headers["Accept"] = "application/json;odata=verbose";
+        requestprom
+          .put({
+            url: url + `/_api/contextinfo`,
+            headers: headers,
+            json: true,
+          })
+          .then(function (listresponses) {
+            const digest =
+              listresponses.d.GetContextWebInformation.FormDigestValue;
+
+            var headers = options.headers;
+            headers["Accept"] = "application/json;odata=verbose";
+            headers["X-HTTP-Method"] = "MERGE";
+            headers["X-RequestDigest"] = digest;
+            headers["IF-MATCH"] = "*";
+            // update user profile
+            requestprom
+              .post({
+                url:
+                  url +
+                  `/_api/web/lists/getByTitle('CandidateExamQuestionChoice')/items(${req.params.submitId})`,
+                headers: headers,
+                body: req.body,
+                json: true,
+              })
+              .then(function (listresponse) {
+                console.log(listresponse, "kkk");
+                res.status(200).json({
+                  success: true,
+                });
+              })
+              .catch(function (err) {
+                return next(new ErrorResponse(err, 500));
+              });
+          })
+          .catch(function (err) {
+            return next(new ErrorResponse(err, 500));
+          });
+      })
+      .catch(function (err) {
+        return next(new ErrorResponse(err, 500));
+      });
+    return;
+  }
+
   spauth
     .getAuth(url, {
       clientId: username,
@@ -222,7 +280,7 @@ exports.answerQuestion = asyncHandler(async (req, res, next) => {
               body: {
                 ...req.body,
                 CandidateIdId: req.user,
-                CandidateExamQuestionIdId: req.params.id,
+                CandidateExamQuestionIdId: req.params.questionId,
               },
               json: true,
             })
@@ -243,6 +301,29 @@ exports.answerQuestion = asyncHandler(async (req, res, next) => {
     .catch(function (err) {
       return next(new ErrorResponse(err, 500));
     });
+});
+
+getUserSubmissions = asyncHandler(async (req) => {
+  const options = await spauth.getAuth(url, {
+    clientId: username,
+    clientSecret: password,
+  });
+
+  //candidateId
+  //QuestionId
+  //ExamId
+
+  const headers = options.headers;
+  headers["Accept"] = "application/json;odata=verbose";
+  const listResponses = await requestprom.get({
+    url:
+      url +
+      `/_api/web/lists/getByTitle('CandidateExamQuestionChoice')/items?$filter=CandidateIdId eq '${req.params.candidateId}' and CandidateExamQuestionIdId eq '${req.params.questionId}' and ExamScheduleIdId eq '${req.params.examId}'`,
+    headers: headers,
+    json: true,
+  });
+
+  return listResponses?.d?.results || [];
 });
 
 exports.verifyExamPassCode = asyncHandler(async (req, res, next) => {
