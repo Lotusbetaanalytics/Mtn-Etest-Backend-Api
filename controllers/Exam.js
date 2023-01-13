@@ -259,11 +259,10 @@ exports.verifyExamPassCode = asyncHandler(async (req, res, next) => {
   });
 
   if (!listResponses.d.results.length) {
-    return next(new ErrorResponse("No exam with this passcode found", 404));
+    return next(new ErrorResponse("No exam with this passcode found", 400));
   }
 
   res.status(200).json({
     success: true,
-    data: req.params.id,
   });
 });
