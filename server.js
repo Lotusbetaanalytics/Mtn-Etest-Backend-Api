@@ -8,19 +8,21 @@ const cors = require("cors");
 const errorHandler = require("./middleware/error");
 const rateLimit = require("express-rate-limit");
 const express = require("express");
-const connectDB = require("./config/db");
+// const connectDB = require("./config/db");
+
+const {testing3, testing4} = require("./spConn")
 
 //load env vars
 dotenv.config({ path: "./config/.env" });
 
 // import routes
-const item  = require("./routes/item")
+// const item  = require("./routes/item")
 
 // configure express
 const app = express();
 
-//connection to the db
-connectDB();
+// //connection to the db
+// connectDB();
 
 // set up app
 app.use(express.json());
@@ -49,7 +51,9 @@ app.use(limiter);
 app.use(cors());
 
 // configure routes
-app.use("/api/v1/item", item)
+app.use("/venue", testing3)
+app.use("/venue-create", testing4);
+// app.use("/api/v1/item", item)
 
 
 app.use(errorHandler);
