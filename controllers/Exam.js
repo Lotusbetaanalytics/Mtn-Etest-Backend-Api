@@ -1,5 +1,6 @@
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
+const { shuffleArray } = require("../utils/generalUtils");
 
 var spauth = require("node-sp-auth");
 var requestprom = require("request-promise");
@@ -126,6 +127,9 @@ const removeDuplicate = (arr = [], key, res) => {
 };
 
 exports.getQuestions = asyncHandler(async (req, res, next) => {
+  // get shuffle from request query
+  const { shuffle = false } = req.query;
+
   // Authenticate with hardcoded credentials
   spauth
     .getAuth(url, {
@@ -162,6 +166,9 @@ exports.getQuestions = asyncHandler(async (req, res, next) => {
               });
             }
           }, this);
+          // Randomize questions if shuffle is true
+          if (shuffle || shuffle === "true") shuffleArray(response);
+
           // Print / Send back the data
           res.status(200).json({
             success: true,
@@ -240,7 +247,7 @@ exports.answerQuestion = asyncHandler(async (req, res, next) => {
 
 exports.verifyExamPassCode = asyncHandler(async (req, res, next) => {
   if (!Object.keys(req.body).length) {
-    return next(new ErrorResponse("Fields cannot be empty.", 400));
+    return next(new ErrorResponse("Please enter the exam passcode", 400));
   }
 
   const options = await spauth.getAuth(url, {
@@ -259,7 +266,7 @@ exports.verifyExamPassCode = asyncHandler(async (req, res, next) => {
   });
 
   if (!listResponses.d.results.length) {
-    return next(new ErrorResponse("No exam with this passcode found", 404));
+    return next(new ErrorResponse("No exam with this passcode found", 400));
   }
 
   res.status(200).json({

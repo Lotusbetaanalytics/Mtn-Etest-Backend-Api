@@ -18,6 +18,7 @@ dotenv.config({ path: "./config/.env" });
 // Routes Files
 const candidate = require("./routes/Candidate");
 const exam = require("./routes/Exam");
+const timer = require("./routes/timer.route");
 const question = require("./routes/Question");
 
 //connect to database
@@ -57,6 +58,7 @@ app.use(cors());
 
 app.use("/api/v1/auth/", candidate);
 app.use("/api/v1/exam/", exam);
+app.use("/api/v1/timer/", timer);
 app.use("/api/v1/question/", question);
 
 app.use(errorHandler);
