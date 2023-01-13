@@ -189,9 +189,9 @@ exports.answerQuestion = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse("Fields cannot be empty.", 400));
   }
 
-  const it = await getUserSubmissions(req);
+  const userSubmissions = await getUserSubmissions(req);
 
-  if (it.length) {
+  if (userSubmissions.length) {
     spauth
       .getAuth(url, {
         clientId: username,
@@ -227,7 +227,6 @@ exports.answerQuestion = asyncHandler(async (req, res, next) => {
                 json: true,
               })
               .then(function (listresponse) {
-                console.log(listresponse, "kkk");
                 res.status(200).json({
                   success: true,
                 });
@@ -308,10 +307,6 @@ getUserSubmissions = asyncHandler(async (req) => {
     clientId: username,
     clientSecret: password,
   });
-
-  //candidateId
-  //QuestionId
-  //ExamId
 
   const headers = options.headers;
   headers["Accept"] = "application/json;odata=verbose";
