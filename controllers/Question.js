@@ -30,6 +30,7 @@ exports.getAnsweredQuestions = asyncHandler(async (req, res, next) => {
       response.push({
         QuestionId: item.CandidateExamQuestionIdId,
         SelectedChoice: item.SelectedChoice,
+        SubmitId: item.ID,
       });
     }
   }, this);
