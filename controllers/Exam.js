@@ -192,6 +192,68 @@ exports.answerQuestion = asyncHandler(async (req, res, next) => {
   const userSubmissions = await getUserSubmissions(req);
 
   if (userSubmissions.length) {
+    Score.updateScore(req, res, next);
+    return;
+  }
+  Score.createScore(req, res, next);
+});
+
+getUserSubmissions = asyncHandler(async (req) => {
+  const options = await spauth.getAuth(url, {
+    clientId: username,
+    clientSecret: password,
+  });
+
+  const headers = options.headers;
+  headers["Accept"] = "application/json;odata=verbose";
+  const listResponses = await requestprom.get({
+    url:
+      url +
+      `/_api/web/lists/getByTitle('CandidateExamQuestionChoice')/items?$filter=CandidateIdId eq '${req.params.candidateId}' and CandidateExamQuestionIdId eq '${req.params.questionId}' and ExamScheduleIdId eq '${req.params.examId}'`,
+    headers: headers,
+    json: true,
+  });
+
+  return listResponses?.d?.results || [];
+});
+
+exports.verifyExamPassCode = asyncHandler(async (req, res, next) => {
+  if (!Object.keys(req.body).length) {
+    return next(new ErrorResponse("Please enter the exam passcode", 400));
+  }
+
+  const options = await spauth.getAuth(url, {
+    clientId: username,
+    clientSecret: password,
+  });
+
+  const headers = options.headers;
+  headers["Accept"] = "application/json;odata=verbose";
+  const listResponses = await requestprom.get({
+    url:
+      url +
+      `/_api/web/lists/getByTitle('CandidateExam')/items?$filter=Passcode eq '${req.body.Passcode}' and ExamScheduleIdId eq '${req.params.id}'`,
+    headers: headers,
+    json: true,
+  });
+
+  if (!listResponses.d.results.length) {
+    return next(new ErrorResponse("No exam with this passcode found", 400));
+  }
+
+  res.status(200).json({
+    success: true,
+    data: req.params.id,
+  });
+});
+
+class Score {
+  constructor(req, res) {
+    this.req = req;
+    this.res = res;
+  }
+
+  static updateScore(req, res, next) {
     spauth
       .getAuth(url, {
         clientId: username,
@@ -245,108 +307,61 @@ exports.answerQuestion = asyncHandler(async (req, res, next) => {
     return;
   }
 
-  spauth
-    .getAuth(url, {
-      clientId: username,
-      clientSecret: password,
-    })
-    .then(function (options) {
-      // Headers
-      var headers = options.headers;
-      headers["Accept"] = "application/json;odata=verbose";
-      requestprom
-        .put({
-          url: url + `/_api/contextinfo`,
-          headers: headers,
-          json: true,
-        })
-        .then(function (listresponses) {
-          const digest =
-            listresponses.d.GetContextWebInformation.FormDigestValue;
+  static createScore(req, res, next) {
+    spauth
+      .getAuth(url, {
+        clientId: username,
+        clientSecret: password,
+      })
+      .then(function (options) {
+        // Headers
+        var headers = options.headers;
+        headers["Accept"] = "application/json;odata=verbose";
+        requestprom
+          .put({
+            url: url + `/_api/contextinfo`,
+            headers: headers,
+            json: true,
+          })
+          .then(function (listresponses) {
+            const digest =
+              listresponses.d.GetContextWebInformation.FormDigestValue;
 
-          var headers = options.headers;
-          headers["Accept"] = "application/json;odata=verbose";
-          headers["X-HTTP-Method"] = "POST";
-          headers["X-RequestDigest"] = digest;
-          headers["IF-MATCH"] = "*";
-          // update user profile
-          requestprom
-            .post({
-              url:
-                url +
-                `/_api/web/lists/getByTitle('CandidateExamQuestionChoice')/items`,
-              headers: headers,
-              body: {
-                ...req.body,
-                CandidateIdId: req.user,
-                CandidateExamQuestionIdId: req.params.questionId,
-              },
-              json: true,
-            })
-            .then(function (listresponse) {
-              // Print / Send back the data
-              res.status(200).json({
-                success: true,
+            var headers = options.headers;
+            headers["Accept"] = "application/json;odata=verbose";
+            headers["X-HTTP-Method"] = "POST";
+            headers["X-RequestDigest"] = digest;
+            headers["IF-MATCH"] = "*";
+            // update user profile
+            requestprom
+              .post({
+                url:
+                  url +
+                  `/_api/web/lists/getByTitle('CandidateExamQuestionChoice')/items`,
+                headers: headers,
+                body: {
+                  ...req.body,
+                  CandidateIdId: req.user,
+                  CandidateExamQuestionIdId: req.params.questionId,
+                },
+                json: true,
+              })
+              .then(function (listresponse) {
+                // Print / Send back the data
+                res.status(200).json({
+                  success: true,
+                });
+              })
+              .catch(function (err) {
+                return next(new ErrorResponse(err, 500));
               });
-            })
-            .catch(function (err) {
-              return next(new ErrorResponse(err, 500));
-            });
-        })
-        .catch(function (err) {
-          return next(new ErrorResponse(err, 500));
-        });
-    })
-    .catch(function (err) {
-      return next(new ErrorResponse(err, 500));
-    });
-});
-
-getUserSubmissions = asyncHandler(async (req) => {
-  const options = await spauth.getAuth(url, {
-    clientId: username,
-    clientSecret: password,
-  });
-
-  const headers = options.headers;
-  headers["Accept"] = "application/json;odata=verbose";
-  const listResponses = await requestprom.get({
-    url:
-      url +
-      `/_api/web/lists/getByTitle('CandidateExamQuestionChoice')/items?$filter=CandidateIdId eq '${req.params.candidateId}' and CandidateExamQuestionIdId eq '${req.params.questionId}' and ExamScheduleIdId eq '${req.params.examId}'`,
-    headers: headers,
-    json: true,
-  });
-
-  return listResponses?.d?.results || [];
-});
-
-exports.verifyExamPassCode = asyncHandler(async (req, res, next) => {
-  if (!Object.keys(req.body).length) {
-    return next(new ErrorResponse("Please enter the exam passcode", 400));
+          })
+          .catch(function (err) {
+            return next(new ErrorResponse(err, 500));
+          });
+      })
+      .catch(function (err) {
+        return next(new ErrorResponse(err, 500));
+      });
   }
-
-  const options = await spauth.getAuth(url, {
-    clientId: username,
-    clientSecret: password,
-  });
-
-  const headers = options.headers;
-  headers["Accept"] = "application/json;odata=verbose";
-  const listResponses = await requestprom.get({
-    url:
-      url +
-      `/_api/web/lists/getByTitle('CandidateExam')/items?$filter=Passcode eq '${req.body.Passcode}' and ExamScheduleIdId eq '${req.params.id}'`,
-    headers: headers,
-    json: true,
-  });
-
-  if (!listResponses.d.results.length) {
-    return next(new ErrorResponse("No exam with this passcode found", 400));
-  }
-
-  res.status(200).json({
-    success: true,
-    data: req.params.id,
-  });
-});
+}
