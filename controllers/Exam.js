@@ -25,7 +25,7 @@ exports.getMyExam = asyncHandler(async (req, res, next) => {
         .get({
           url:
             url +
-            `/_api/web/lists/getByTitle('CandidateExam')/items?$filter=CandidateId eq '${req.user}'`,
+            `/_api/web/lists/getByTitle('CandidateExam')/items?$filter=CandidateId eq '${req.user}'&$select=*, ExamScheduleId/MaxStartDateTime, ExamScheduleId/StartDateTime&$expand=ExamScheduleId`,
           headers: headers,
           json: true,
         })
@@ -47,7 +47,8 @@ exports.getMyExam = asyncHandler(async (req, res, next) => {
                 Candidate: item.Candidate,
                 ExamSchedule: item.ExamSchedule,
                 SelectedOption: item.SelectedOption,
-                DueDate: item.DueDate,
+                MaxStartTime: item.ExamScheduleId.MaxStartDateTime,
+                StartTime: item.ExamScheduleId.StartDateTime,
                 Mark: item.Mark,
                 Status: item.Status,
               });
