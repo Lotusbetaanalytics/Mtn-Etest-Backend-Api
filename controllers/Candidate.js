@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 var http = require("http");
 var spauth = require("node-sp-auth");
 var requestprom = require("request-promise");
+const imageToBase64 = require("image-to-base64");
 // Site and User Creds
 var url = process.env.SITE;
 var username = process.env.CLIENT_ID;
@@ -125,7 +126,11 @@ exports.getMe = asyncHandler(async (req, res, next) => {
           var items = listresponse.d.results;
 
           var user = {};
+
           items.forEach(function (item) {
+            // const image = await imageToBase64(item.Passport); // Image URL
+
+            // console.log(image);
             if (item) {
               user = {
                 ID: item.ID,
