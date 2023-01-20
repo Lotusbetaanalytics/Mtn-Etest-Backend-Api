@@ -19,21 +19,15 @@ exports.getExamTimer = asyncHandler(async (req, res, next) => {
   const listResponses = await requestprom.get({
     url:
       url +
-      `/_api/web/lists/getByTitle('ExamSchedule')/items(${req.params.examId})`,
+      `/_api/web/lists/getByTitle('ExamTimer')/items?filter='CandidateId eq ${req.user} and ExamId eq ${req.params.examId}'`,
     headers: headers,
     json: true,
   });
 
-  function toHoursAndMinutes(totalMinutes) {
-    const hours = Math.floor(totalMinutes / 60);
-    // const minutes = totalMinutes % 60;
+  const all = listResponses.d.results.reverse();
 
-    return hours;
-  }
+  const timer = all?.[0].StartTime;
 
-  const time = toHoursAndMinutes(listResponses.d.Duration) * 60 * 60 * 1000;
-  console.log("timer", time);
-  const timer = Date.now() + time;
   res.status(200).json({
     success: true,
     timer: timer,

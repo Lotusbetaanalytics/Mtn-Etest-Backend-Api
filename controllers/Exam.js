@@ -242,21 +242,18 @@ exports.verifyExamPassCode = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse("No exam with this passcode found", 400));
   }
   const examtime = listResponses?.d?.results?.[0]?.ExamScheduleId.Duration;
-  function toHoursAndMinutes(totalMinutes) {
-    const hours = Math.floor(totalMinutes / 60);
-    // const minutes = totalMinutes % 60;
-    return hours;
+  // function toHoursAndMinutes(totalMinutes) {
+  //   const hours = Math.floor(totalMinutes * 60);
+  //   // const minutes = totalMinutes % 60;
+  //   return hours;
+  // }
+  if (examtime) {
+    const time = (examtime + 1) * 60000;
+    const timer = Date.now() + time;
+    res.data = { timer: timer, id: req.params.id };
+
+    await saveTimer(req, res, next);
   }
-
-  const time = toHoursAndMinutes(examtime + 1) * 60 * 60 * 1000;
-  const timer = Date.now() + time;
-
-  await saveTimer(req, res, next);
-
-  res.status(200).json({
-    success: true,
-    data: req.params.id,
-  });
 });
 
 const saveTimer = asyncHandler(async (req, res, next) => {
@@ -274,7 +271,7 @@ const saveTimer = asyncHandler(async (req, res, next) => {
   });
   const digest = context.d.GetContextWebInformation.FormDigestValue;
   headers["Accept"] = "application/json;odata=verbose";
-  headers["X-HTTP-Method"] = "MERGE";
+  headers["X-HTTP-Method"] = "POST";
   headers["X-RequestDigest"] = digest;
   headers["IF-MATCH"] = "*";
 
@@ -282,12 +279,20 @@ const saveTimer = asyncHandler(async (req, res, next) => {
     .post({
       url: url + `/_api/web/lists/getByTitle('ExamTimer')/items`,
       headers: headers,
-      body: { CandidateId: req.user, ExamId: req.params.id, StartTime: "m" },
+      body: {
+        CandidateId: req.user,
+        ExamId: req.params.id,
+        StartTime: res?.data?.timer.toString(),
+      },
       json: true,
     })
     .catch(function (err) {
       return next(new ErrorResponse(err, 500));
     });
+  res.status(200).json({
+    success: true,
+    data: res.data.id,
+  });
 });
 
 class Score {
