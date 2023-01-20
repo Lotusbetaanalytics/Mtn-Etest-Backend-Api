@@ -21,6 +21,7 @@ const exam = require("./routes/Exam");
 const timer = require("./routes/timer.route");
 const question = require("./routes/Question");
 const result = require("./routes/Result");
+const doc = require("./routes/Doc");
 
 //connect to database
 
@@ -62,6 +63,7 @@ app.use("/api/v1/exam/", exam);
 app.use("/api/v1/timer/", timer);
 app.use("/api/v1/question/", question);
 app.use("/api/v1/result/", result);
+app.use("/api/v1/doc/", doc);
 
 app.use(errorHandler);
 
