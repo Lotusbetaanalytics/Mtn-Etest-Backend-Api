@@ -233,7 +233,7 @@ exports.verifyExamPassCode = asyncHandler(async (req, res, next) => {
   const listResponses = await requestprom.get({
     url:
       url +
-      `/_api/web/lists/getByTitle('CandidateExam')/items?$filter=Passcode eq '${req.body.Passcode}' and ExamScheduleIdId eq '${req.params.id}'`,
+      `/_api/web/lists/getByTitle('CandidateExam')/items?$filter=Passcode eq '${req.body.Passcode}' and ExamScheduleIdId eq '${req.params.id}'&$select=*, ExamScheduleId/Duration&$expand=ExamScheduleId`,
     headers: headers,
     json: true,
   });
@@ -241,11 +241,53 @@ exports.verifyExamPassCode = asyncHandler(async (req, res, next) => {
   if (!listResponses.d.results.length) {
     return next(new ErrorResponse("No exam with this passcode found", 400));
   }
+  const examtime = listResponses?.d?.results?.[0]?.ExamScheduleId.Duration;
+  function toHoursAndMinutes(totalMinutes) {
+    const hours = Math.floor(totalMinutes / 60);
+    // const minutes = totalMinutes % 60;
+    return hours;
+  }
+
+  const time = toHoursAndMinutes(examtime + 1) * 60 * 60 * 1000;
+  const timer = Date.now() + time;
+
+  await saveTimer(req, res, next);
 
   res.status(200).json({
     success: true,
     data: req.params.id,
   });
+});
+
+const saveTimer = asyncHandler(async (req, res, next) => {
+  const options = await spauth.getAuth(url, {
+    clientId: username,
+    clientSecret: password,
+  });
+
+  const headers = options.headers;
+  headers["Accept"] = "application/json;odata=verbose";
+  const context = await requestprom.put({
+    url: url + `/_api/contextinfo`,
+    headers: headers,
+    json: true,
+  });
+  const digest = context.d.GetContextWebInformation.FormDigestValue;
+  headers["Accept"] = "application/json;odata=verbose";
+  headers["X-HTTP-Method"] = "MERGE";
+  headers["X-RequestDigest"] = digest;
+  headers["IF-MATCH"] = "*";
+
+  await requestprom
+    .post({
+      url: url + `/_api/web/lists/getByTitle('ExamTimer')/items`,
+      headers: headers,
+      body: { CandidateId: req.user, ExamId: req.params.id, StartTime: "m" },
+      json: true,
+    })
+    .catch(function (err) {
+      return next(new ErrorResponse(err, 500));
+    });
 });
 
 class Score {

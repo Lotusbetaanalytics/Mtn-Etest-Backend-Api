@@ -19,6 +19,7 @@ exports.login = asyncHandler(async (req, res, next) => {
       new ErrorResponse("Please Provide an UserId and Passcode", 400)
     );
   }
+
   // Authenticate with hardcoded credentials
   spauth
     .getAuth(url, {
@@ -40,9 +41,22 @@ exports.login = asyncHandler(async (req, res, next) => {
         })
         .then(function (listresponse) {
           var items = listresponse.d.results;
+
+          //if incorrect id or passcode
           if (items.length <= 0) {
             return next(new ErrorResponse("Invalid credentials", 401));
           }
+          const token = items?.[0].Token;
+          //check if token exist in sharepoint list
+          if (token) {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            if (decoded) {
+              return next(
+                new ErrorResponse("You are logged in currently", 400)
+              );
+            }
+          }
+
           var user = {};
           items.forEach(function (item) {
             if (item) {
@@ -93,10 +107,60 @@ const sendTokenResponse = (user, statusCode, res) => {
     options.secure = true;
   }
 
-  res.status(statusCode).cookie("token", token, options).json({
-    success: true,
-    token,
-  });
+  // update token in list
+
+  spauth
+    .getAuth(url, {
+      clientId: username,
+      clientSecret: password,
+    })
+    .then(function (options) {
+      // Headers
+      var headers = options.headers;
+      headers["Accept"] = "application/json;odata=verbose";
+      requestprom
+        .put({
+          url: url + `/_api/contextinfo`,
+          headers: headers,
+          json: true,
+        })
+        .then(function (listresponses) {
+          const digest =
+            listresponses.d.GetContextWebInformation.FormDigestValue;
+
+          var headers = options.headers;
+          headers["Accept"] = "application/json;odata=verbose";
+          headers["X-HTTP-Method"] = "MERGE";
+          headers["X-RequestDigest"] = digest;
+          headers["IF-MATCH"] = "*";
+          // update user profile
+          requestprom
+            .post({
+              url:
+                url +
+                `/_api/web/lists/getByTitle('Candidate')/items(${user.ID})`,
+              headers: headers,
+              body: { Token: token },
+              json: true,
+            })
+            .then(function () {
+              // login user
+              res.status(statusCode).cookie("token", token, options).json({
+                success: true,
+                token,
+              });
+            })
+            .catch(function (err) {
+              return next(new ErrorResponse(err, 500));
+            });
+        })
+        .catch(function (err) {
+          return next(new ErrorResponse(err, 500));
+        });
+    })
+    .catch(function (err) {
+      return next(new ErrorResponse(err, 500));
+    });
 };
 
 // @desc    Get current logged in user
