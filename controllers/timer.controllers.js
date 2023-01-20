@@ -32,6 +32,7 @@ exports.getExamTimer = asyncHandler(async (req, res, next) => {
   }
 
   const time = toHoursAndMinutes(listResponses.d.Duration) * 60 * 60 * 1000;
+  console.log("timer", time);
   const timer = Date.now() + time;
   res.status(200).json({
     success: true,
