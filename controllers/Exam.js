@@ -51,6 +51,7 @@ exports.getMyExam = asyncHandler(async (req, res, next) => {
                 StartTime: item.ExamScheduleId.StartDateTime,
                 Mark: item.Mark,
                 Status: item.Status,
+                Instruction: item.Instruction || "N/A",
               });
             }
           }, this);
@@ -96,7 +97,7 @@ exports.getSections = asyncHandler(async (req, res, next) => {
           var items = listresponse.d.results;
 
           var response = [];
-          items.forEach(function (item) {
+          items.forEach(async function (item) {
             if (item) {
               response.push({
                 ExamSectionIdId: item.ExamSectionIdId,

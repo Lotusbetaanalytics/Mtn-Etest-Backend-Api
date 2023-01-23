@@ -207,7 +207,7 @@ exports.getMe = asyncHandler(async (req, res, next) => {
                 YearsOfExperience: item.YearsOfExperience,
                 Firstname: item.Firstname,
                 Batch: item.Batch,
-                Passport: item.Passport,
+                Passport: item.PassportB64,
                 Middlename: item.Middlename,
                 Lastname: item.Lastname,
                 Fullname: item.Fullname,
