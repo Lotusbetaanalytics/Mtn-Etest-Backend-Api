@@ -159,7 +159,6 @@ exports.getQuestions = asyncHandler(async (req, res, next) => {
           var response = [];
           items.forEach(function (item) {
             if (item) {
-              // response.push(item);
               response.push({
                 Question: item.Question,
                 QuestionID: item.QuestionId.ID,
@@ -293,6 +292,30 @@ const saveTimer = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     data: res.data.id,
+  });
+});
+
+exports.getExamInstruction = asyncHandler(async (req, res, next) => {
+  const options = await spauth.getAuth(url, {
+    clientId: username,
+    clientSecret: password,
+  });
+
+  const headers = options.headers;
+  headers["Accept"] = "application/json;odata=verbose";
+  const listResponses = await requestprom.get({
+    url:
+      url +
+      `/_api/web/lists/getByTitle('ExamSchedule')/items(${req.params.id})`,
+    headers: headers,
+    json: true,
+  });
+
+  const instruction = listResponses.d.Instruction || "N/A";
+
+  res.status(200).json({
+    success: true,
+    instruction,
   });
 });
 

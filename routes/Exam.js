@@ -5,6 +5,7 @@ const {
   getQuestions,
   answerQuestion,
   verifyExamPassCode: verifyExamSchedulePassCode,
+  getExamInstruction,
 } = require("../controllers/Exam");
 const { protect } = require("../middleware/auth");
 const router = express.Router();
@@ -13,6 +14,7 @@ router.route("/").get(protect, getMyExam);
 router.route("/:id/passcode-verify").post(protect, verifyExamSchedulePassCode);
 router.route("/sections/:id").get(protect, getSections);
 router.route("/questions/:id").get(protect, getQuestions);
+router.route("/:id/instruction").get(protect, getExamInstruction);
 
 router
   .route(
