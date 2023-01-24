@@ -75,6 +75,7 @@ exports.login = asyncHandler(async (req, res, next) => {
                 Middlename: item.Middlename,
                 Lastname: item.Lastname,
                 Fullname: item.Fullname,
+                UserId: item.UserId,
               };
             }
           }, this);
@@ -266,6 +267,60 @@ exports.updateProfile = asyncHandler(async (req, res, next) => {
                 `/_api/web/lists/getByTitle('Candidate')/items(${req.user})`,
               headers: headers,
               body: req.body,
+              json: true,
+            })
+            .then(function (listresponse) {
+              // Print / Send back the data
+              res.status(200).json({
+                success: true,
+              });
+            })
+            .catch(function (err) {
+              return next(new ErrorResponse(err, 500));
+            });
+        })
+        .catch(function (err) {
+          return next(new ErrorResponse(err, 500));
+        });
+    })
+    .catch(function (err) {
+      return next(new ErrorResponse(err, 500));
+    });
+});
+
+exports.logout = asyncHandler(async (req, res, next) => {
+  spauth
+    .getAuth(url, {
+      clientId: username,
+      clientSecret: password,
+    })
+    .then(function (options) {
+      // Headers
+      var headers = options.headers;
+      headers["Accept"] = "application/json;odata=verbose";
+      requestprom
+        .put({
+          url: url + `/_api/contextinfo`,
+          headers: headers,
+          json: true,
+        })
+        .then(function (listresponses) {
+          const digest =
+            listresponses.d.GetContextWebInformation.FormDigestValue;
+
+          var headers = options.headers;
+          headers["Accept"] = "application/json;odata=verbose";
+          headers["X-HTTP-Method"] = "MERGE";
+          headers["X-RequestDigest"] = digest;
+          headers["IF-MATCH"] = "*";
+          // update user profile
+          requestprom
+            .post({
+              url:
+                url +
+                `/_api/web/lists/getByTitle('Candidate')/items(${req.user})`,
+              headers: headers,
+              body: { Token: "" },
               json: true,
             })
             .then(function (listresponse) {

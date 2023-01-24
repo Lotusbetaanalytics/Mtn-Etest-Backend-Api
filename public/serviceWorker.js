@@ -6,7 +6,6 @@ this.addEventListener("install", (event) => {
     caches
       .open(CACHE_NAME)
       .then((cache) => {
-        console.log("cache opened");
         return cache.addAll(urlsToCache);
       })
       .catch((err) => {
