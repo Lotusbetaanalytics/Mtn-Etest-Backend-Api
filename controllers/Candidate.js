@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 var http = require("http");
 var spauth = require("node-sp-auth");
 var requestprom = require("request-promise");
-const imageToBase64 = require("image-to-base64");
+
 // Site and User Creds
 var url = process.env.SITE;
 var username = process.env.CLIENT_ID;
@@ -212,6 +212,7 @@ exports.getMe = asyncHandler(async (req, res, next) => {
                 Middlename: item.Middlename,
                 Lastname: item.Lastname,
                 Fullname: item.Fullname,
+                UserId: item.UserId,
               };
             }
           }, this);

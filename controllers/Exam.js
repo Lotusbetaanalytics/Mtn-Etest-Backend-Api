@@ -71,6 +71,43 @@ exports.getMyExam = asyncHandler(async (req, res, next) => {
     });
 });
 
+exports.getSingleExam = asyncHandler(async (req, res, next) => {
+  // Authenticate with hardcoded credentials
+  spauth
+    .getAuth(url, {
+      clientId: username,
+      clientSecret: password,
+    })
+    .then(function (options) {
+      // Headers
+      var headers = options.headers;
+      headers["Accept"] = "application/json;odata=verbose";
+      // Pull the SharePoint list items
+      requestprom
+        .get({
+          url:
+            url +
+            `/_api/web/lists/getByTitle('CandidateExam')/items(${req.params.id})`,
+          headers: headers,
+          json: true,
+        })
+        .then(function (listresponse) {
+          // Print / Send back the data
+
+          res.status(200).json({
+            success: true,
+            data: listresponse?.d?.Status,
+          });
+        })
+        .catch(function (err) {
+          return next(new ErrorResponse(err, 500));
+        });
+    })
+    .catch(function (err) {
+      return next(new ErrorResponse(err, 500));
+    });
+});
+
 exports.getSections = asyncHandler(async (req, res, next) => {
   // Authenticate with hardcoded credentials
   spauth
