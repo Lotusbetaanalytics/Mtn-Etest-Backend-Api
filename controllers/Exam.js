@@ -149,7 +149,7 @@ exports.getQuestions = asyncHandler(async (req, res, next) => {
             url +
             `/_api/web/lists/getByTitle('ExamQuest')/items?$filter=ExamSectionId eq '${parseInt(
               req.params.id
-            )}'&$select=Question, QuestionId/Answers, QuestionId/ID,QuestionId/Category&$expand=QuestionId`,
+            )}'&$select=Question, QuestionId/Answers, QuestionId/ID,QuestionId/Category,QuestionId/QuestionType&$expand=QuestionId`,
           headers: headers,
           json: true,
         })
@@ -163,6 +163,7 @@ exports.getQuestions = asyncHandler(async (req, res, next) => {
                 Question: item.Question,
                 QuestionID: item.QuestionId.ID,
                 Category: item.QuestionId.Category,
+                Type: item.QuestionId.QuestionType,
                 Answers: JSON.parse(item.QuestionId.Answers),
               });
             }
