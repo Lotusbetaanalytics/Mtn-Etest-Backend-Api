@@ -11,6 +11,7 @@ const rateLimit = require("express-rate-limit");
 const hpp = require("hpp");
 const cors = require("cors");
 const errorHandler = require("./middleware/error");
+const socket = require("socket.io");
 
 //load env vars
 dotenv.config({ path: "./config/.env" });
@@ -98,7 +99,8 @@ const io = socket(server, {
   cors: {
     origin: [
       "http://localhost:3000",
-      "https://mtncloud.sharepoint.com/sites/UATApplications/e-test",
+      "https://mtncloud.sharepoint.com",
+      // "https://mtncloud.sharepoint.com/sites/UATApplications/e-test",
     ],
     credentials: true,
   },
