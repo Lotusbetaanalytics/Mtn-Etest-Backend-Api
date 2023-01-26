@@ -18,7 +18,7 @@ router.route("/:id/passcode-verify").post(protect, verifyExamSchedulePassCode);
 router.route("/sections/:id").get(protect, getSections);
 router.route("/questions/:id").get(protect, getQuestions);
 router.route("/:id/instruction").get(protect, getExamInstruction);
-router.route("/start-exam:id").put(protect, startExam);
+router.route("/start/:id").put(protect, startExam);
 
 router
   .route(
