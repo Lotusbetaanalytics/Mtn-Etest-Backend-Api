@@ -11,6 +11,7 @@ const rateLimit = require("express-rate-limit");
 const hpp = require("hpp");
 const cors = require("cors");
 const errorHandler = require("./middleware/error");
+const socket = require("socket.io");
 
 //load env vars
 dotenv.config({ path: "./config/.env" });
@@ -92,4 +93,34 @@ process.on("unhandledRejection", (err, promise) => {
   // close Server & exit Process
 
   server.close(() => process.exit(1));
+});
+
+const io = socket(server, {
+  cors: {
+    origin: [
+      "http://localhost:3000",
+      "https://mtncloud.sharepoint.com",
+      // "https://mtncloud.sharepoint.com/sites/UATApplications/e-test",
+    ],
+    credentials: true,
+  },
+});
+
+global.onlineUsers = new Map();
+io.on("connection", (socket) => {
+  global.chatSocket = socket;
+  socket.on("add-user", (userId) => {
+    console.log("connected");
+    onlineUsers.set(userId, socket.id);
+  });
+
+  socket.on("send-msg", (data) => {
+    console.log(data.receiver, "rec");
+    const sendUserSocket = onlineUsers.get(data.receiver);
+    console.log(data, "send");
+    if (sendUserSocket) {
+      console.log("Yes");
+      socket.to(sendUserSocket).emit("msg-receive", data.message);
+    }
+  });
 });
