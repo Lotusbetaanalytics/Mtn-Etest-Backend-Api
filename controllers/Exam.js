@@ -186,7 +186,7 @@ exports.getQuestions = asyncHandler(async (req, res, next) => {
             url +
             `/_api/web/lists/getByTitle('ExamQuest')/items?$filter=ExamSectionId eq '${parseInt(
               req.params.id
-            )}'&$select=Question, QuestionId/Answers, QuestionId/ID,QuestionId/Category,QuestionId/QuestionType,QuestionId/Image&$expand=QuestionId`,
+            )}'&$select=Question, QuestionId/Answers, QuestionId/ID,QuestionId/Category,QuestionId/QuestionType,QuestionId/Image, ExamSectionId/Duration&$expand=QuestionId, ExamSectionId`,
           headers: headers,
           json: true,
         })
@@ -203,6 +203,7 @@ exports.getQuestions = asyncHandler(async (req, res, next) => {
                 Type: item.QuestionId.QuestionType,
                 Answers: JSON.parse(item.QuestionId.Answers),
                 Image: item.QuestionId.Image,
+                Duration: item.ExamSectionId.Duration,
               });
             }
           }, this);
