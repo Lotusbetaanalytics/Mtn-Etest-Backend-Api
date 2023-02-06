@@ -29,7 +29,7 @@ exports.submitExam = asyncHandler(async (req, res, next) => {
           headers: headers,
           json: true,
         })
-        .then(function (listresponse) {
+        .then(async function (listresponse) {
           var items = listresponse.d.results;
           if (items.length <= 0) {
             return next(new ErrorResponse("Not Available", 404));
@@ -42,8 +42,8 @@ exports.submitExam = asyncHandler(async (req, res, next) => {
           }, this);
 
           //sum up score
-          updateExamStatus(req, res, next);
           const TotalScore = score.reduce((acc, item) => item + acc, 0);
+          await updateExamStatus(req, res, next, TotalScore);
 
           // Print / Send back the data
           res.status(200).json({
@@ -55,15 +55,12 @@ exports.submitExam = asyncHandler(async (req, res, next) => {
           return next(new ErrorResponse(err, 500));
         });
     })
-    .then(async (_result) => {
-      await updateExamStatus(req, res, next)
-    })
     .catch(function (err) {
       return next(new ErrorResponse(err, 500));
     });
 });
 
-const updateExamStatus = asyncHandler(async (req, res, next) => {
+const updateExamStatus = asyncHandler(async (req, res, next, score = undefined) => {
   const options = await spauth.getAuth(url, {
     clientId: username,
     clientSecret: password,
@@ -87,6 +84,19 @@ const updateExamStatus = asyncHandler(async (req, res, next) => {
   });
   const listID = getID?.d?.results?.[0].ID;
 
+  const getScheduledExam = await requestprom.get({
+    url:
+      url +
+      `/_api/web/lists/getByTitle('ExamSchedule')/items?$filter=ID eq '${req.body.examID}'`,
+    headers: headers,
+    json: true,
+  });
+  const scheduledExamTotalMark = getScheduledExam?.d?.results?.[0].TotalExamMark;
+  console.log({ scheduledExamTotalMark });
+
+  let percentageScore;
+  percentageScore = (score / scheduledExamTotalMark) * 100;
+
   headers["Accept"] = "application/json;odata=verbose";
   headers["X-HTTP-Method"] = "MERGE";
   headers["X-RequestDigest"] = digest;
@@ -96,7 +106,7 @@ const updateExamStatus = asyncHandler(async (req, res, next) => {
     .post({
       url: url + `/_api/web/lists/getByTitle('CandidateExam')/items(${listID})`,
       headers: headers,
-      body: { Status: "Completed" },
+      body: { Status: "Completed", Mark: percentageScore },
       json: true,
     })
     .catch(function (err) {
