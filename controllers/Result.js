@@ -55,6 +55,9 @@ exports.submitExam = asyncHandler(async (req, res, next) => {
           return next(new ErrorResponse(err, 500));
         });
     })
+    .then(async (_result) => {
+      await updateExamStatus(req, res, next)
+    })
     .catch(function (err) {
       return next(new ErrorResponse(err, 500));
     });
