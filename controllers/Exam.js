@@ -107,6 +107,27 @@ exports.getSingleExam = asyncHandler(async (req, res, next) => {
       return next(new ErrorResponse(err, 500));
     });
 });
+exports.getSectionDetails = asyncHandler(async (req, res, next) => {
+  // Authenticate with hardcoded credentials
+  const options = await spauth.getAuth(url, {
+    clientId: username,
+    clientSecret: password,
+  });
+
+  let headers = options.headers;
+  headers["Accept"] = "application/json;odata=verbose";
+  const result = await requestprom.get({
+    url:
+      url + `/_api/web/lists/getByTitle('ExamSection')/items(${req.params.id})`,
+    headers: headers,
+    json: true,
+  });
+
+  res.status(200).json({
+    success: true,
+    data: { Instruction: result?.d.Description, Duration: result.d.Duration },
+  });
+});
 
 exports.getSections = asyncHandler(async (req, res, next) => {
   // Authenticate with hardcoded credentials
@@ -135,6 +156,7 @@ exports.getSections = asyncHandler(async (req, res, next) => {
 
           var response = [];
           items.forEach(async function (item) {
+            console.log(item);
             if (item) {
               response.push({
                 ExamSectionIdId: item.ExamSectionIdId,
