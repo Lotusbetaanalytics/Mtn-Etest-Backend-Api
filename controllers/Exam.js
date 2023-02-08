@@ -309,6 +309,7 @@ exports.verifyExamPassCode = asyncHandler(async (req, res, next) => {
   //   // const minutes = totalMinutes % 60;
   //   return hours;
   // }
+  console.log(examtime, "etime");
   if (examtime) {
     const time = (examtime + 1) * 60000;
     const timer = Date.now() + time;
