@@ -45,11 +45,11 @@ app.use(helmet());
 app.use(xss());
 
 //Rate limiting
-const limiter = rateLimit({
-  windowMs: 1000 * 60 * 1000, // 1000 mins
-  max: 1000,
-});
-app.use(limiter);
+// const limiter = rateLimit({
+//   windowMs: 1000 * 60 * 1000, // 1000 mins
+//   max: 1000,
+// });
+// app.use(limiter);
 
 //prevent http param pollution
 app.use(hpp());

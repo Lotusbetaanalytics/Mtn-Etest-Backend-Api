@@ -27,7 +27,7 @@ exports.getExamTimer = asyncHandler(async (req, res, next) => {
   const all = listResponses.d.results.reverse();
 
   const timer = all?.[0].StartTime;
-
+  console.log(timer, "timer");
   res.status(200).json({
     success: true,
     timer: timer,
