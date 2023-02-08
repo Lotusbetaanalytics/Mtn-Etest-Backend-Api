@@ -21,7 +21,7 @@ exports.getLib = asyncHandler(async (req, res, next) => {
     .then(function (options) {
       // Headers
       var headers = options.headers;
-      console.log(headers);
+
       headers["Accept"] = "application/json;odata=verbose";
       // Pull the SharePoint list items
       requestprom

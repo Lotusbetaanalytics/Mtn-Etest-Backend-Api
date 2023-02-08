@@ -156,7 +156,6 @@ exports.getSections = asyncHandler(async (req, res, next) => {
 
           var response = [];
           items.forEach(async function (item) {
-            console.log(item);
             if (item) {
               response.push({
                 ExamSectionIdId: item.ExamSectionIdId,
@@ -252,7 +251,7 @@ exports.answerQuestion = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse("Fields cannot be empty.", 400));
   }
 
-  const userSubmissions = await getUserSubmissions(req);
+  const userSubmissions = getUserSubmissions(req);
 
   if (userSubmissions.length) {
     Score.updateScore(req, res, next);

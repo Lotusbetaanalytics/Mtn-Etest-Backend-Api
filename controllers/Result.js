@@ -92,7 +92,7 @@ const updateExamStatus = asyncHandler(async (req, res, next, score = undefined) 
     json: true,
   });
   const scheduledExamTotalMark = getScheduledExam?.d?.results?.[0].TotalExamMark;
-  console.log({ scheduledExamTotalMark });
+
 
   let percentageScore;
   percentageScore = (score / scheduledExamTotalMark) * 100;
