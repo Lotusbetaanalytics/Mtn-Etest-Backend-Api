@@ -23,9 +23,7 @@ router.route("/:id/instruction").get(protect, getExamInstruction);
 router.route("/start/:id").put(protect, startExam);
 
 router
-  .route(
-    "/questions/:questionId/candidates/:candidateId/exams/:examId/submissions/:submitId"
-  )
+  .route("/questions/:questionId/candidates/:candidateId/exams/:examId/")
   .put(protect, answerQuestion);
 
 module.exports = router;
