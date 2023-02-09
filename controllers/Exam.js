@@ -147,7 +147,7 @@ exports.getSections = asyncHandler(async (req, res, next) => {
             url +
             `/_api/web/lists/getByTitle('ExamQuest')/items?$filter=ExamScheduleId eq '${parseInt(
               req.params.id
-            )}'`,
+            )}'&$select=*, ExamSectionId/Duration&$expand=ExamSectionId`,
           headers: headers,
           json: true,
         })
@@ -160,6 +160,7 @@ exports.getSections = asyncHandler(async (req, res, next) => {
               response.push({
                 ExamSectionIdId: item.ExamSectionIdId,
                 ExamSection: item.ExamSection,
+                Duration: item.ExamSectionId?.Duration * 60000,
               });
             }
           }, this);
@@ -308,7 +309,7 @@ exports.verifyExamPassCode = asyncHandler(async (req, res, next) => {
   //   // const minutes = totalMinutes % 60;
   //   return hours;
   // }
-  console.log(examtime, "etime");
+
   if (examtime) {
     const time = (examtime + 1) * 60000;
     const timer = Date.now() + time;
