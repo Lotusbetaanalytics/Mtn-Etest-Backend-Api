@@ -31,9 +31,9 @@ exports.submitExam = asyncHandler(async (req, res, next) => {
         })
         .then(async function (listresponse) {
           var items = listresponse.d.results;
-          if (items.length <= 0) {
-            return next(new ErrorResponse("Not Available", 404));
-          }
+          // if (items.length <= 0) {
+          //   return next(new ErrorResponse("Not Available", 404));
+          // }
           var score = [];
           items.forEach(function (item) {
             if (item) {
@@ -60,7 +60,7 @@ exports.submitExam = asyncHandler(async (req, res, next) => {
     });
 });
 
-const updateExamStatus = asyncHandler(async (req, res, next, score = undefined) => {
+const updateExamStatus = asyncHandler(async (req, res, next, score = 0) => {
   const options = await spauth.getAuth(url, {
     clientId: username,
     clientSecret: password,
@@ -83,6 +83,7 @@ const updateExamStatus = asyncHandler(async (req, res, next, score = undefined) 
     json: true,
   });
   const listID = getID?.d?.results?.[0].ID;
+  console.log({listID})
 
   const getScheduledExam = await requestprom.get({
     url:
@@ -96,6 +97,7 @@ const updateExamStatus = asyncHandler(async (req, res, next, score = undefined) 
 
   let percentageScore;
   percentageScore = (score / scheduledExamTotalMark) * 100;
+  console.log({percentageScore, score, scheduledExamTotalMark})
 
   headers["Accept"] = "application/json;odata=verbose";
   headers["X-HTTP-Method"] = "MERGE";
