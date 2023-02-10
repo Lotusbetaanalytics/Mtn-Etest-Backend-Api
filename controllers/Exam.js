@@ -125,7 +125,10 @@ exports.getSectionDetails = asyncHandler(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    data: { Instruction: result?.d.Description, Duration: result.d.Duration },
+    data: {
+      Instruction: result?.d.Description,
+      Duration: result.d.Duration * 60000,
+    },
   });
 });
 
@@ -177,7 +180,7 @@ exports.getSections = asyncHandler(async (req, res, next) => {
 });
 
 const removeDuplicate = (arr = [], key, res) => {
-  var checker = new Set();
+  const checker = new Set();
   const data = arr.filter(
     (it) => !checker.has(it[key]) && checker.add(it[key])
   );
@@ -277,7 +280,9 @@ exports.getExamQuestions = asyncHandler(async (req, res, next) => {
             url +
             `/_api/web/lists/getByTitle('ExamQuest')/items?$filter=((ExamSectionId eq '${parseInt(
               req.params.id
-            )}') and (ExamScheduleId eq '${parseInt(req.params.examSchedId)}'))&$select=Question, QuestionId/Answers, QuestionId/ID,QuestionId/Category,QuestionId/QuestionType,QuestionId/Image, ExamSectionId/Duration&$expand=QuestionId, ExamSectionId`,
+            )}') and (ExamScheduleId eq '${parseInt(
+              req.params.examSchedId
+            )}'))&$select=Question, QuestionId/Answers, QuestionId/ID,QuestionId/Category,QuestionId/QuestionType,QuestionId/Image, ExamSectionId/Duration&$expand=QuestionId, ExamSectionId`,
           headers: headers,
           json: true,
         })
@@ -316,9 +321,6 @@ exports.getExamQuestions = asyncHandler(async (req, res, next) => {
     });
 });
 
-
-
-
 exports.answerQuestion = asyncHandler(async (req, res, next) => {
   if (Object.keys(req.body).length <= 0) {
     return next(new ErrorResponse("Fields cannot be empty.", 400));
@@ -333,7 +335,7 @@ exports.answerQuestion = asyncHandler(async (req, res, next) => {
   Score.createScore(req, res, next);
 });
 
-getUserSubmissions = asyncHandler(async (req) => {
+const getUserSubmissions = asyncHandler(async (req) => {
   const options = await spauth.getAuth(url, {
     clientId: username,
     clientSecret: password,
@@ -350,6 +352,20 @@ getUserSubmissions = asyncHandler(async (req) => {
   });
 
   return listResponses?.d?.results || [];
+});
+
+exports.answerQuestion = asyncHandler(async (req, res, next) => {
+  if (Object.keys(req.body).length <= 0) {
+    return next(new ErrorResponse("Fields cannot be empty.", 400));
+  }
+
+  const userSubmissions = await getUserSubmissions(req);
+
+  if (userSubmissions.length) {
+    Score.updateScore(req, res, next);
+    return;
+  }
+  Score.createScore(req, res, next);
 });
 
 exports.verifyExamPassCode = asyncHandler(async (req, res, next) => {
@@ -489,12 +505,16 @@ class Score {
             headers["X-HTTP-Method"] = "MERGE";
             headers["X-RequestDigest"] = digest;
             headers["IF-MATCH"] = "*";
-            // update user profile
+
+            if (!req.query.submitId) {
+              return next(new ErrorResponse("No id found", 400));
+            }
+
             requestprom
               .post({
                 url:
                   url +
-                  `/_api/web/lists/getByTitle('CandidateExamQuestionChoice')/items(${req.params.submitId})`,
+                  `/_api/web/lists/getByTitle('CandidateExamQuestionChoice')/items(${req.query.submitId})`,
                 headers: headers,
                 body: req.body,
                 json: true,

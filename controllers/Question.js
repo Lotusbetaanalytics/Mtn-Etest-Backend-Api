@@ -33,6 +33,7 @@ exports.getAnsweredQuestions = asyncHandler(async (req, res, next) => {
         SubmitId: item.ID,
         examID: item.ExamScheduleIdId,
         Score: item.Score,
+        SectionId: item.SectionId,
       });
     }
   }, this);
