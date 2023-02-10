@@ -125,7 +125,10 @@ exports.getSectionDetails = asyncHandler(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    data: { Instruction: result?.d.Description, Duration: result.d.Duration },
+    data: {
+      Instruction: result?.d.Description,
+      Duration: result.d.Duration * 60000,
+    },
   });
 });
 
