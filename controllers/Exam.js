@@ -206,9 +206,9 @@ exports.getQuestions = asyncHandler(async (req, res, next) => {
         .get({
           url:
             url +
-            `/_api/web/lists/getByTitle('ExamQuest')/items?$filter=ExamSectionId eq '${parseInt(
+            `/_api/web/lists/getByTitle('ExamQuest')/items?$filter=((ExamSectionId eq '${parseInt(
               req.params.id
-            )}'&$select=Question, QuestionId/Answers, QuestionId/ID,QuestionId/Category,QuestionId/QuestionType,QuestionId/Image, ExamSectionId/Duration&$expand=QuestionId, ExamSectionId`,
+            )}'))&$select=Question, QuestionId/Answers, QuestionId/ID,QuestionId/Category,QuestionId/QuestionType,QuestionId/Image, ExamSectionId/Duration&$expand=QuestionId, ExamSectionId`,
           headers: headers,
           json: true,
         })
@@ -245,6 +245,91 @@ exports.getQuestions = asyncHandler(async (req, res, next) => {
     .catch(function (err) {
       return next(new ErrorResponse(err, 500));
     });
+});
+
+exports.getExamQuestions = asyncHandler(async (req, res, next) => {
+  // get shuffle from request query
+  const { shuffle = false } = req.query;
+
+  // Authenticate with hardcoded credentials
+  spauth
+    .getAuth(url, {
+      clientId: username,
+      clientSecret: password,
+    })
+    .then(function (options) {
+      // Headers
+      var headers = options.headers;
+      headers["Accept"] = "application/json;odata=verbose";
+      // Pull the SharePoint list items
+      requestprom
+        // .get({
+        //   url:
+        //     url +
+        //     `/_api/web/lists/getByTitle('ExamQuest')/items?$filter=((ExamSectionId eq '${parseInt(
+        //       req.params.id
+        //     )}'))&$select=Question, QuestionId/Answers, QuestionId/ID,QuestionId/Category,QuestionId/QuestionType,QuestionId/Image, ExamSectionId/Duration&$expand=QuestionId, ExamSectionId`,
+        //   headers: headers,
+        //   json: true,
+        // })
+        .get({
+          url:
+            url +
+            `/_api/web/lists/getByTitle('ExamQuest')/items?$filter=((ExamSectionId eq '${parseInt(
+              req.params.id
+            )}') and (ExamScheduleId eq '${parseInt(
+              req.params.examSchedId
+            )}'))&$select=Question, QuestionId/Answers, QuestionId/ID,QuestionId/Category,QuestionId/QuestionType,QuestionId/Image, ExamSectionId/Duration&$expand=QuestionId, ExamSectionId`,
+          headers: headers,
+          json: true,
+        })
+        .then(function (listresponse) {
+          var items = listresponse.d.results;
+
+          var response = [];
+          items.forEach(function (item) {
+            if (item) {
+              response.push({
+                Question: item.Question,
+                QuestionID: item.QuestionId.ID,
+                Category: item.QuestionId.Category,
+                Type: item.QuestionId.QuestionType,
+                Answers: JSON.parse(item.QuestionId.Answers),
+                Image: item.QuestionId.Image,
+                Duration: item.ExamSectionId.Duration,
+              });
+            }
+          }, this);
+          // Randomize questions if shuffle is true
+          if (shuffle || shuffle === "true") shuffleArray(response);
+
+          // Print / Send back the data
+          res.status(200).json({
+            success: true,
+            data: response,
+          });
+        })
+        .catch(function (err) {
+          return next(new ErrorResponse(err, 500));
+        });
+    })
+    .catch(function (err) {
+      return next(new ErrorResponse(err, 500));
+    });
+});
+
+exports.answerQuestion = asyncHandler(async (req, res, next) => {
+  if (Object.keys(req.body).length <= 0) {
+    return next(new ErrorResponse("Fields cannot be empty.", 400));
+  }
+
+  const userSubmissions = await getUserSubmissions(req);
+
+  if (userSubmissions.length) {
+    Score.updateScore(req, res, next);
+    return;
+  }
+  Score.createScore(req, res, next);
 });
 
 const getUserSubmissions = asyncHandler(async (req) => {

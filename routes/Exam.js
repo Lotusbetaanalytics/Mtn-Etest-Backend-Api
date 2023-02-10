@@ -3,6 +3,7 @@ const {
   getMyExam,
   getSections,
   getQuestions,
+  getExamQuestions,
   answerQuestion,
   verifyExamPassCode: verifyExamSchedulePassCode,
   getExamInstruction,
@@ -19,6 +20,7 @@ router.route("/:id/passcode-verify").post(protect, verifyExamSchedulePassCode);
 router.route("/sections/:id").get(protect, getSections);
 router.route("/section-detail/:id").get(protect, getSectionDetails);
 router.route("/questions/:id").get(protect, getQuestions);
+router.route("/questions/:id/:examSchedId").get(protect, getExamQuestions);
 router.route("/:id/instruction").get(protect, getExamInstruction);
 router.route("/start/:id").put(protect, startExam);
 
