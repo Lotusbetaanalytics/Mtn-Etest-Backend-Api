@@ -6,5 +6,24 @@ function shuffleArray(array) {
     [array[i], array[j]] = [array[j], array[i]];
   }
 }
+// Function to check if a datetime and today's date are equal
+function isEqualDateTime(date1) {
+  // Get the values of year, month and day from both dates
+  date1 = new Date(date1);
+  const date2 = new Date();
 
-module.exports = { shuffleArray };
+  const d1 = date1.toLocaleDateString();
+
+  const d2 = date2.toLocaleDateString();
+
+  // Get the values of hours, minutes and seconds from both dates
+  const h1 = date1.getHours();
+
+  const h2 = date2.getHours() - 1;
+
+  console.log(`date1-${d1} ${h1}`, `date2-${d2} ${h2}`);
+
+  // Check if all the values are equal or not
+  return d1 == d2 && h1 == h2;
+}
+module.exports = { shuffleArray, isEqualDateTime };
