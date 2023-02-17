@@ -1,6 +1,6 @@
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
-const { shuffleArray } = require("../utils/generalUtils");
+const { shuffleArray, isEqualDateTime } = require("../utils/generalUtils");
 
 var spauth = require("node-sp-auth");
 var requestprom = require("request-promise");
@@ -25,15 +25,17 @@ exports.getMyExam = asyncHandler(async (req, res, next) => {
         .get({
           url:
             url +
-            `/_api/web/lists/getByTitle('CandidateExam')/items?$filter=CandidateId eq '${req.user}'&$select=*, ExamScheduleId/MaxStartDateTime, ExamScheduleId/StartDateTime&$expand=ExamScheduleId`,
+            `/_api/web/lists/getByTitle('CandidateExam')/items?$filter=CandidateId eq '${req.user}' and ExamScheduleId/Status eq 'Scheduled' &$select=*, ExamScheduleId/MaxStartDateTime, ExamScheduleId/Status, ExamScheduleId/StartDateTime&$expand=ExamScheduleId`,
           headers: headers,
           json: true,
         })
         .then(function (listresponse) {
-          var items = listresponse.d.results;
-          if (items.length <= 0) {
-            return next(new ErrorResponse("Invalid credentials", 401));
-          }
+          var items = listresponse.d.results.filter(
+            (it) =>
+              isEqualDateTime(it.ExamScheduleId.StartDateTime) ||
+              isEqualDateTime(it.ExamScheduleId.MaxStartDateTime)
+          );
+
           var response = [];
           items.forEach(function (item) {
             if (item) {
