@@ -43,12 +43,13 @@ exports.submitExam = asyncHandler(async (req, res, next) => {
 
           //sum up score
           const TotalScore = score.reduce((acc, item) => item + acc, 0);
-          await updateExamStatus(req, res, next, TotalScore);
+          const PercentageScore = await updateExamStatus(req, res, next, TotalScore);
 
           // Print / Send back the data
           res.status(200).json({
             success: true,
             data: TotalScore,
+            score: PercentageScore,
           });
         })
         .catch(function (err) {
@@ -114,4 +115,6 @@ const updateExamStatus = asyncHandler(async (req, res, next, score = 0) => {
     .catch(function (err) {
       return next(new ErrorResponse(err, 500));
     });
+
+  return percentageScore
 });
