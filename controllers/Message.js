@@ -25,12 +25,13 @@ exports.getExamMessages = asyncHandler(async (req, res, next) => {
         .get({
           url:
             url +
-            `/_api/web/lists/getByTitle('Message')/items?$filter=((ExamScheduleId eq '${req.params.examSchedId}') and (ExamScheduleId eq '${req.body.examID}'))`,
+            `/_api/web/lists/getByTitle('Message')/items?$filter=(ExamScheduleId eq '${req.params.examSchedId}')`,
           headers: headers,
           json: true,
         })
         .then(async function (listresponse) {
           var items = listresponse.d.results;
+          console.log({items})
           // if (items.length <= 0) {
           //   return next(new ErrorResponse("Not Available", 404));
           // }
