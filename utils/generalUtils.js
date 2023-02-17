@@ -26,4 +26,20 @@ function isEqualDateTime(date1) {
   // Check if all the values are equal or not
   return d1 == d2 && h1 == h2;
 }
-module.exports = { shuffleArray, isEqualDateTime };
+
+const isEligible = (from, to) => {
+  const today = new Date().toLocaleDateString();
+  let arr = [];
+  let dt = new Date(to);
+  from = new Date(from);
+  while (dt <= from) {
+    arr.push(new Date(dt).toLocaleDateString());
+    dt.setDate(dt.getDate() + 1);
+  }
+  return arr.includes(today);
+};
+module.exports = {
+  shuffleArray,
+  isEqualDateTime,
+  isEligible,
+};
