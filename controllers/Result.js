@@ -100,7 +100,7 @@ const updateExamStatus = asyncHandler(async (req, res, next, score = 0) => {
   let percentageScore;
   percentageScore = (score / scheduledExamTotalMark) * 100;
   const remark = percentageScore >= cutOffMark ? "Pass" : "Fail"
-  console.log({percentageScore, remark, score, scheduledExamTotalMark, cutOffMark})
+  // console.log({percentageScore, remark, score, scheduledExamTotalMark, cutOffMark})
 
   headers["Accept"] = "application/json;odata=verbose";
   headers["X-HTTP-Method"] = "MERGE";
