@@ -43,13 +43,13 @@ exports.submitExam = asyncHandler(async (req, res, next) => {
 
           //sum up score
           const TotalScore = score.reduce((acc, item) => item + acc, 0);
-          const PercentageScore = await updateExamStatus(req, res, next, TotalScore);
+          const detailedScore = await updateExamStatus(req, res, next, TotalScore);
 
           // Print / Send back the data
           res.status(200).json({
             success: true,
-            data: TotalScore,
-            score: PercentageScore,
+            // data: TotalScore,
+            data: detailedScore,
           });
         })
         .catch(function (err) {
@@ -93,12 +93,14 @@ const updateExamStatus = asyncHandler(async (req, res, next, score = 0) => {
     headers: headers,
     json: true,
   });
-  const scheduledExamTotalMark = getScheduledExam?.d?.results?.[0].TotalExamMark;
-
+  const scheduledExam = getScheduledExam?.d?.results?.[0]
+  const scheduledExamTotalMark = scheduledExam.TotalExamMark;
+  const cutOffMark = scheduledExam.CutOffMark
 
   let percentageScore;
   percentageScore = (score / scheduledExamTotalMark) * 100;
-  console.log({percentageScore, score, scheduledExamTotalMark})
+  const remark = percentageScore >= cutOffMark ? "Pass" : "Fail"
+  console.log({percentageScore, remark, score, scheduledExamTotalMark, cutOffMark})
 
   headers["Accept"] = "application/json;odata=verbose";
   headers["X-HTTP-Method"] = "MERGE";
@@ -116,5 +118,8 @@ const updateExamStatus = asyncHandler(async (req, res, next, score = 0) => {
       return next(new ErrorResponse(err, 500));
     });
 
-  return percentageScore
+  return {
+    score: percentageScore,
+    remark: remark
+  }
 });
