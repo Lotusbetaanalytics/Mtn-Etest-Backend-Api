@@ -29,7 +29,7 @@ exports.getMyExam = asyncHandler(async (req, res, next) => {
         .get({
           url:
             url +
-            `/_api/web/lists/getByTitle('CandidateExam')/items?$filter=CandidateId eq '${req.user}' and ExamScheduleId/Status eq 'Scheduled' &$select=*, ExamScheduleId/MaxStartDateTime, ExamScheduleId/Status, ExamScheduleId/StartDateTime&$expand=ExamScheduleId`,
+            `/_api/web/lists/getByTitle('CandidateExam')/items?$filter=CandidateId eq '${req.user}' and ExamScheduleId/Status eq 'Scheduled' or ExamScheduleId/Status eq 'Re-Scheduled' &$select=*, ExamScheduleId/MaxStartDateTime, ExamScheduleId/Status, ExamScheduleId/StartDateTime&$expand=ExamScheduleId`,
           headers: headers,
           json: true,
         })
@@ -218,7 +218,7 @@ exports.getQuestions = asyncHandler(async (req, res, next) => {
             url +
             `/_api/web/lists/getByTitle('ExamQuest')/items?$filter=((ExamSectionId eq '${parseInt(
               req.params.id
-            )}'))&$select=Question, QuestionId/Answers, QuestionId/ID,QuestionId/Category,QuestionId/QuestionType,QuestionId/Image, ExamSectionId/Duration&$expand=QuestionId, ExamSectionId`,
+            )}'))&$select=Question, QuestionId/Answers, QuestionId/ID,QuestionId/Category,QuestionId/QuestionType,QuestionId/Image,QuestionId/Description, ExamSectionId/Duration&$expand=QuestionId, ExamSectionId`,
           headers: headers,
           json: true,
         })
@@ -236,6 +236,7 @@ exports.getQuestions = asyncHandler(async (req, res, next) => {
                 Answers: JSON.parse(item.QuestionId.Answers),
                 Image: item.QuestionId.Image,
                 Duration: item.ExamSectionId.Duration,
+                Instruction: item.QuestionId.Description || "N/A",
               });
             }
           }, this);
@@ -289,7 +290,7 @@ exports.getExamQuestions = asyncHandler(async (req, res, next) => {
               req.params.id
             )}') and (ExamScheduleId eq '${parseInt(
               req.params.examSchedId
-            )}'))&$select=Question, QuestionId/Answers, QuestionId/ID,QuestionId/Category,QuestionId/QuestionType,QuestionId/Image, ExamSectionId/Duration&$expand=QuestionId, ExamSectionId`,
+            )}'))&$select=Question, QuestionId/Answers, QuestionId/ID,QuestionId/Category,QuestionId/QuestionType,QuestionId/Image,QuestionId/Description, ExamSectionId/Duration&$expand=QuestionId, ExamSectionId`,
           headers: headers,
           json: true,
         })
@@ -307,6 +308,7 @@ exports.getExamQuestions = asyncHandler(async (req, res, next) => {
                 Answers: JSON.parse(item.QuestionId.Answers),
                 Image: item.QuestionId.Image,
                 Duration: item.ExamSectionId.Duration,
+                Instruction: item.QuestionId.Description || "N/A",
               });
             }
           }, this);
