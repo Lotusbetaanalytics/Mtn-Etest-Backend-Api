@@ -36,6 +36,7 @@ const isEligible = (from, to) => {
     arr.push(new Date(dt).toLocaleDateString());
     dt.setDate(dt.getDate() + 1);
   }
+
   return arr.includes(today);
 };
 module.exports = {

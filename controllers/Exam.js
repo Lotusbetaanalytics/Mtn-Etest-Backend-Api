@@ -138,6 +138,30 @@ exports.getSectionDetails = asyncHandler(async (req, res, next) => {
     },
   });
 });
+exports.getQuestionDetails = asyncHandler(async (req, res, next) => {
+  // Authenticate with hardcoded credentials
+  const options = await spauth.getAuth(url, {
+    clientId: username,
+    clientSecret: password,
+  });
+
+  let headers = options.headers;
+  headers["Accept"] = "application/json;odata=verbose";
+  const result = await requestprom.get({
+    url: url + `/_api/web/lists/getByTitle('Question')/items(${req.params.id})`,
+    headers: headers,
+    json: true,
+  });
+
+  res.status(200).json({
+    success: true,
+    data: {
+      Instruction: result.d.Description,
+      Image: result.d.Description.ImageB64,
+      Body: result.d.Body,
+    },
+  });
+});
 
 exports.getSections = asyncHandler(async (req, res, next) => {
   // Authenticate with hardcoded credentials
