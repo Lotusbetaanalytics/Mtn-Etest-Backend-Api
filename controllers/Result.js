@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 var http = require("http");
 var spauth = require("node-sp-auth");
 var requestprom = require("request-promise");
+const { simpleAsync } = require("../utils/generalUtils");
 // Site and User Creds
 var url = process.env.SITE;
 var username = process.env.CLIENT_ID;
@@ -43,6 +44,7 @@ exports.submitExam = asyncHandler(async (req, res, next) => {
 
           //sum up score
           const TotalScore = score.reduce((acc, item) => item + acc, 0);
+          console.log({TotalScore})
           const detailedScore = await updateExamStatus(req, res, next, TotalScore);
 
           // Print / Send back the data
@@ -61,7 +63,8 @@ exports.submitExam = asyncHandler(async (req, res, next) => {
     });
 });
 
-const updateExamStatus = asyncHandler(async (req, res, next, score = 0) => {
+// const updateExamStatus = asyncHandler(async (req, res, next, score = 0) => {
+const updateExamStatus = simpleAsync(async (req, res, next, score = 0) => {
   const options = await spauth.getAuth(url, {
     clientId: username,
     clientSecret: password,
@@ -96,11 +99,14 @@ const updateExamStatus = asyncHandler(async (req, res, next, score = 0) => {
   const scheduledExam = getScheduledExam?.d?.results?.[0]
   const scheduledExamTotalMark = scheduledExam.TotalExamMark;
   const cutOffMark = scheduledExam.CutOffMark
+  const displayResult = scheduledExam.DisplayExamResult
 
   let percentageScore;
   percentageScore = (score / scheduledExamTotalMark) * 100;
+  percentageScore = Number(percentageScore.toFixed(2))
   const remark = percentageScore >= cutOffMark ? "Pass" : "Fail"
   // console.log({percentageScore, remark, score, scheduledExamTotalMark, cutOffMark})
+  console.log({percentageScore, remark, score, scheduledExamTotalMark, cutOffMark})
 
   headers["Accept"] = "application/json;odata=verbose";
   headers["X-HTTP-Method"] = "MERGE";
@@ -120,6 +126,7 @@ const updateExamStatus = asyncHandler(async (req, res, next, score = 0) => {
 
   return {
     score: percentageScore,
-    remark: remark
+    remark: remark,
+    displayResult: displayResult
   }
 });
