@@ -38,8 +38,12 @@ const isEligible = (from, to) => {
   }
   return arr.includes(today);
 };
+
+const simpleAsync = (fn) => (...args) => Promise.resolve(fn(...args)).catch(err => new Error(err.message));
+
 module.exports = {
   shuffleArray,
   isEqualDateTime,
   isEligible,
+  simpleAsync,
 };
