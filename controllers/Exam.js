@@ -29,7 +29,7 @@ exports.getMyExam = asyncHandler(async (req, res, next) => {
         .get({
           url:
             url +
-            `/_api/web/lists/getByTitle('CandidateExam')/items?$filter=CandidateId eq '${req.user}' and ExamScheduleId/Status eq 'Scheduled' &$select=*, ExamScheduleId/MaxStartDateTime, ExamScheduleId/Status, ExamScheduleId/StartDateTime&$expand=ExamScheduleId`,
+            `/_api/web/lists/getByTitle('CandidateExam')/items?$filter=CandidateId eq '${req.user}' and ExamScheduleId/Status eq 'Scheduled' or ExamScheduleId/Status eq 'Re-Scheduled' &$select=*, ExamScheduleId/MaxStartDateTime, ExamScheduleId/Status, ExamScheduleId/StartDateTime&$expand=ExamScheduleId`,
           headers: headers,
           json: true,
         })
@@ -138,6 +138,30 @@ exports.getSectionDetails = asyncHandler(async (req, res, next) => {
     },
   });
 });
+exports.getQuestionDetails = asyncHandler(async (req, res, next) => {
+  // Authenticate with hardcoded credentials
+  const options = await spauth.getAuth(url, {
+    clientId: username,
+    clientSecret: password,
+  });
+
+  let headers = options.headers;
+  headers["Accept"] = "application/json;odata=verbose";
+  const result = await requestprom.get({
+    url: url + `/_api/web/lists/getByTitle('Question')/items(${req.params.id})`,
+    headers: headers,
+    json: true,
+  });
+
+  res.status(200).json({
+    success: true,
+    data: {
+      Instruction: result.d.Description,
+      Image: result.d.Description.ImageB64,
+      Body: result.d.Body,
+    },
+  });
+});
 
 exports.getSections = asyncHandler(async (req, res, next) => {
   // Authenticate with hardcoded credentials
@@ -218,7 +242,7 @@ exports.getQuestions = asyncHandler(async (req, res, next) => {
             url +
             `/_api/web/lists/getByTitle('ExamQuest')/items?$filter=((ExamSectionId eq '${parseInt(
               req.params.id
-            )}'))&$select=Question, QuestionId/Answers, QuestionId/ID,QuestionId/Category,QuestionId/QuestionType,QuestionId/Image, ExamSectionId/Duration&$expand=QuestionId, ExamSectionId`,
+            )}'))&$select=Question, QuestionId/Answers, QuestionId/ID,QuestionId/Category,QuestionId/QuestionType,QuestionId/Image,QuestionId/Description, ExamSectionId/Duration&$expand=QuestionId, ExamSectionId`,
           headers: headers,
           json: true,
         })
@@ -236,6 +260,7 @@ exports.getQuestions = asyncHandler(async (req, res, next) => {
                 Answers: JSON.parse(item.QuestionId.Answers),
                 Image: item.QuestionId.Image,
                 Duration: item.ExamSectionId.Duration,
+                Instruction: item.QuestionId.Description || "N/A",
               });
             }
           }, this);
@@ -289,7 +314,7 @@ exports.getExamQuestions = asyncHandler(async (req, res, next) => {
               req.params.id
             )}') and (ExamScheduleId eq '${parseInt(
               req.params.examSchedId
-            )}'))&$select=Question, QuestionId/Answers, QuestionId/ID,QuestionId/Category,QuestionId/QuestionType,QuestionId/Image, ExamSectionId/Duration&$expand=QuestionId, ExamSectionId`,
+            )}'))&$select=Question, QuestionId/Answers, QuestionId/ID,QuestionId/Category,QuestionId/QuestionType,QuestionId/Image,QuestionId/Description, ExamSectionId/Duration&$expand=QuestionId, ExamSectionId`,
           headers: headers,
           json: true,
         })
@@ -307,6 +332,7 @@ exports.getExamQuestions = asyncHandler(async (req, res, next) => {
                 Answers: JSON.parse(item.QuestionId.Answers),
                 Image: item.QuestionId.Image,
                 Duration: item.ExamSectionId.Duration,
+                Instruction: item.QuestionId.Description || "N/A",
               });
             }
           }, this);
