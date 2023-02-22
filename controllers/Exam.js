@@ -29,7 +29,7 @@ exports.getMyExam = asyncHandler(async (req, res, next) => {
         .get({
           url:
             url +
-            `/_api/web/lists/getByTitle('CandidateExam')/items?$filter=CandidateId eq '${req.user}' and ExamScheduleId/Status eq 'Scheduled' or ExamScheduleId/Status eq 'Re-Scheduled' &$select=*, ExamScheduleId/MaxStartDateTime, ExamScheduleId/Status, ExamScheduleId/StartDateTime&$expand=ExamScheduleId`,
+            `/_api/web/lists/getByTitle('CandidateExam')/items?$filter=CandidateId eq '${req.user}' and ExamScheduleId/Status eq 'Scheduled' or ExamScheduleId/Status eq 'Re-Scheduled' &$select=*, ExamScheduleId/MaxStartDateTime, ExamScheduleId/Status,ExamScheduleId/Duration, ExamScheduleId/StartDateTime&$expand=ExamScheduleId`,
           headers: headers,
           json: true,
         })
@@ -56,6 +56,7 @@ exports.getMyExam = asyncHandler(async (req, res, next) => {
                 SelectedOption: item.SelectedOption,
                 MaxStartTime: item.ExamScheduleId.MaxStartDateTime,
                 StartTime: item.ExamScheduleId.StartDateTime,
+                Duration: item.ExamScheduleId.Duration,
                 Mark: item.Mark,
                 Status: item.Status,
                 Instruction: item.Instruction || "N/A",
@@ -157,7 +158,7 @@ exports.getQuestionDetails = asyncHandler(async (req, res, next) => {
     success: true,
     data: {
       Instruction: result.d.Description,
-      Image: result.d.Description.ImageB64,
+      Image: result.d.ImageB64,
       Body: result.d.Body,
     },
   });
