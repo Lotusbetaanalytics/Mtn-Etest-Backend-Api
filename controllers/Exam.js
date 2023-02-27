@@ -9,6 +9,7 @@ const {
 
 var spauth = require("node-sp-auth");
 var requestprom = require("request-promise");
+const { sectionStartEnd } = require("../utils/sectionTimeUtils");
 // Site and User Creds
 var url = process.env.SITE;
 var username = process.env.CLIENT_ID;
@@ -324,7 +325,8 @@ exports.getExamQuestions = asyncHandler(async (req, res, next) => {
           headers: headers,
           json: true,
         })
-        .then(function (listresponse) {
+        .then(async function (listresponse) {
+          await sectionStartEnd(req, res, next, req.params.id, req.params.examSchedId)
           var items = listresponse.d.results;
 
           var response = [];
@@ -352,6 +354,7 @@ exports.getExamQuestions = asyncHandler(async (req, res, next) => {
           });
         })
         .catch(function (err) {
+          console.log(err.message)
           return next(new ErrorResponse(err, 500));
         });
     })
