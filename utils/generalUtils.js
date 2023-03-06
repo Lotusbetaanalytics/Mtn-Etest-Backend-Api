@@ -39,8 +39,24 @@ const isEligible = (from, to) => {
 
   return arr.includes(today);
 };
+const disableItem = (from, to) => {
+  const now = new Date().getTime();
+  let arr = [];
 
-const simpleAsync = (fn) => (...args) => Promise.resolve(fn(...args)).catch(err => new Error(err.message));
+  let dt = new Date(to);
+  from = new Date(from);
+  while (dt <= from) {
+    arr.push(new Date(dt).getTime());
+    dt.setTime(dt.getTime() + 1);
+  }
+
+  return !arr.includes(now);
+};
+
+const simpleAsync =
+  (fn) =>
+  (...args) =>
+    Promise.resolve(fn(...args)).catch((err) => new Error(err.message));
 
 const splitInstructions = (str) => {
   if (!str) return
@@ -55,4 +71,5 @@ module.exports = {
   isEligible,
   simpleAsync,
   splitInstructions,
+  disableItem,
 };

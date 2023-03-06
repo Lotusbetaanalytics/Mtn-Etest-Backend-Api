@@ -5,6 +5,7 @@ const {
   isEqualDateTime,
   isEligible,
   splitInstructions,
+  disableItem,
 } = require("../utils/generalUtils");
 
 var spauth = require("node-sp-auth");
@@ -75,10 +76,15 @@ exports.getMyExam = asyncHandler(async (req, res, next) => {
                 Duration: item.ExamScheduleId.Duration,
                 Mark: item.Mark,
                 Status: item.Status,
+                // Instruction: item.Instruction || "N/A",
                 Instruction: splitInstructions(item.ExamScheduleId.Instruction) || "N/A",
+                disabled: disableItem(
+                  item.ExamScheduleId.MaxStartDateTime,
+                  item.ExamScheduleId.StartDateTime
+                ),
               });
             }
-          }, this);
+          });
 
           // Print / Send back the data
           res.status(200).json({
