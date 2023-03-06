@@ -61,7 +61,6 @@ const simpleAsync =
 const splitInstructions = (str) => {
   if (!str) return
   const result  = str.split(/\.?\r?\n/).filter(Boolean)
-  console.log({result})
   return result
 }
 

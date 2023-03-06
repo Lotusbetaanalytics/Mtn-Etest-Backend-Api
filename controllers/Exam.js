@@ -85,7 +85,6 @@ exports.getMyExam = asyncHandler(async (req, res, next) => {
               } catch (error) {
                 console.log(error.message)
               }
-              console.log({payload})
               response.push(payload);
             }
           // });
