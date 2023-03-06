@@ -45,23 +45,10 @@ exports.getMyExam = asyncHandler(async (req, res, next) => {
           );
 
           var response = [];
-          await items.forEach(async function (item) {
+          // await items.forEach(async function (item) {
+          for (const item of items) {
             if (item) {
-              console.log({item})
-              // try {
-              //   // Pull the SharePoint list items
-              //   const examSched  = await requestprom
-              //     .get({
-              //       url:
-              //         url +
-              //         `/_api/web/lists/getByTitle('ExamSchedule')/items?$filter=ID eq '${req.user}'`,
-              //       headers: headers,
-              //       json: true,
-              //     })
-              // } catch (error) {
-                
-              // }
-              response.push({
+              const payload = {
                 ID: item.ID,
                 CandidateIdId: item.CandidateIdId,
                 ExamScheduleIdId: item.ExamScheduleIdId,
@@ -77,14 +64,32 @@ exports.getMyExam = asyncHandler(async (req, res, next) => {
                 Mark: item.Mark,
                 Status: item.Status,
                 // Instruction: item.Instruction || "N/A",
-                Instruction: splitInstructions(item.ExamScheduleId.Instruction) || "N/A",
+                // Instruction: splitInstructions(item.ExamScheduleId.Instruction) || "N/A",
                 disabled: disableItem(
                   item.ExamScheduleId.MaxStartDateTime,
                   item.ExamScheduleId.StartDateTime
                 ),
-              });
+              }
+              try {
+                // Pull the SharePoint list items
+                const getExamSched  = await requestprom
+                  .get({
+                    url:
+                      url +
+                      `/_api/web/lists/getByTitle('ExamSchedule')/items?$filter=ID eq '${item.ExamScheduleIdId}'`,
+                    headers: headers,
+                    json: true,
+                  })
+                const examSched = getExamSched.d.results[0]
+                payload.Instruction = splitInstructions(examSched.Instruction)
+              } catch (error) {
+                console.log(error.message)
+              }
+              console.log({payload})
+              response.push(payload);
             }
-          });
+          // });
+          };
 
           // Print / Send back the data
           res.status(200).json({
