@@ -42,9 +42,17 @@ const isEligible = (from, to) => {
 
 const simpleAsync = (fn) => (...args) => Promise.resolve(fn(...args)).catch(err => new Error(err.message));
 
+const splitInstructions = (str) => {
+  if (!str) return
+  const result  = str.split(/\.?\r?\n/).filter(Boolean)
+  console.log({result})
+  return result
+}
+
 module.exports = {
   shuffleArray,
   isEqualDateTime,
   isEligible,
   simpleAsync,
+  splitInstructions,
 };

@@ -4,6 +4,7 @@ const {
   shuffleArray,
   isEqualDateTime,
   isEligible,
+  splitInstructions,
 } = require("../utils/generalUtils");
 
 var spauth = require("node-sp-auth");
@@ -30,11 +31,11 @@ exports.getMyExam = asyncHandler(async (req, res, next) => {
         .get({
           url:
             url +
-            `/_api/web/lists/getByTitle('CandidateExam')/items?$filter=CandidateId eq '${req.user}' and ExamScheduleId/Status eq 'Scheduled' or ExamScheduleId/Status eq 'Re-Scheduled' &$select=*, ExamScheduleId/MaxStartDateTime, ExamScheduleId/Status,ExamScheduleId/Duration, ExamScheduleId/StartDateTime&$expand=ExamScheduleId`,
+            `/_api/web/lists/getByTitle('CandidateExam')/items?$filter=CandidateId eq '${req.user}' and ExamScheduleId/Status eq 'Scheduled' or ExamScheduleId/Status eq 'Re-Scheduled' &$select=*, ExamScheduleId/MaxStartDateTime, ExamScheduleId/Status, ExamScheduleId/Duration, ExamScheduleId/StartDateTime&$expand=ExamScheduleId`,
           headers: headers,
           json: true,
         })
-        .then(function (listresponse) {
+        .then(async function (listresponse) {
           var items = listresponse.d.results.filter((it) =>
             isEligible(
               it.ExamScheduleId.MaxStartDateTime,
@@ -43,8 +44,22 @@ exports.getMyExam = asyncHandler(async (req, res, next) => {
           );
 
           var response = [];
-          items.forEach(function (item) {
+          await items.forEach(async function (item) {
             if (item) {
+              console.log({item})
+              // try {
+              //   // Pull the SharePoint list items
+              //   const examSched  = await requestprom
+              //     .get({
+              //       url:
+              //         url +
+              //         `/_api/web/lists/getByTitle('ExamSchedule')/items?$filter=ID eq '${req.user}'`,
+              //       headers: headers,
+              //       json: true,
+              //     })
+              // } catch (error) {
+                
+              // }
               response.push({
                 ID: item.ID,
                 CandidateIdId: item.CandidateIdId,
@@ -60,7 +75,7 @@ exports.getMyExam = asyncHandler(async (req, res, next) => {
                 Duration: item.ExamScheduleId.Duration,
                 Mark: item.Mark,
                 Status: item.Status,
-                Instruction: item.Instruction || "N/A",
+                Instruction: splitInstructions(item.ExamScheduleId.Instruction) || "N/A",
               });
             }
           }, this);
@@ -135,7 +150,7 @@ exports.getSectionDetails = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     data: {
-      Instruction: result?.d.Description,
+      Instruction: splitInstructions(result?.d.Description),
       Duration: result.d.Duration * 60000,
     },
   });
@@ -158,7 +173,7 @@ exports.getQuestionDetails = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     data: {
-      Instruction: result.d.Description,
+      Instruction: splitInstructions(result.d.Description),
       Image: result.d.ImageB64,
       Body: result.d.Body,
     },
@@ -262,7 +277,7 @@ exports.getQuestions = asyncHandler(async (req, res, next) => {
                 Answers: JSON.parse(item.QuestionId.Answers),
                 Image: item.QuestionId.Image,
                 Duration: item.ExamSectionId.Duration,
-                Instruction: item.QuestionId.Description || "N/A",
+                Instruction: splitInstructions(item.QuestionId.Description) || "N/A",
               });
             }
           }, this);
@@ -335,7 +350,7 @@ exports.getExamQuestions = asyncHandler(async (req, res, next) => {
                 Answers: JSON.parse(item.QuestionId.Answers),
                 Image: item.QuestionId.Image,
                 Duration: item.ExamSectionId.Duration,
-                Instruction: item.QuestionId.Description || "N/A",
+                Instruction: splitInstructions(item.QuestionId.Description) || "N/A",
               });
             }
           }, this);
